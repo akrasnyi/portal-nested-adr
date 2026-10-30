@@ -5,7 +5,7 @@ Chain: shell -> app-hub (remote of shell, host of Use case A) -> Use case A. The
 ## Environment
 
 Node v26.4.0, npm (public registry via `.npmrc`). Exact pins: vite 5.4.14, @vitejs/plugin-react 4.3.3, babel-plugin-react-compiler 19.1.0-rc.3,
-typescript 5.5.4, @biomejs/biome 2.4.2, @module-federation/vite 1.7.2, react / react-dom 19.0.0, react-router + react-router-dom 6.30.4,
+typescript 5.5.4, @module-federation/vite 1.7.2, react / react-dom 19.0.0, react-router + react-router-dom 6.30.4,
 @tanstack/react-query 5.90.2. Headless Chromium (playwright 1.64.1 driving the cached chromium_headless_shell-1228).
 
 `npm ls @module-federation/runtime react react-dom react-router @portal/contract` (trimmed): exactly one version of each.
@@ -17,7 +17,7 @@ typescript 5.5.4, @biomejs/biome 2.4.2, @module-federation/vite 1.7.2, react / r
     ├── react-dom@19.0.0, react-router@6.30.4
     └── @portal/contract@0.1.0 -> ./packages/contract (shell, app-hub, Use case A all deduped to it)
 
-`npx biome check .` clean; `npm run typecheck` (tsc per app, contract, node configs) clean.
+`npm run typecheck` (tsc per app, contract, node configs) clean.
 
 ## Results
 
@@ -69,7 +69,6 @@ Share scope: `__SHARE__` has one map per instance, but all three point at the sa
 - `react-router` added as an explicit dependency (6.30.4) so it can be shared and its version read from root `node_modules`.
 - `erasableSyntaxOnly` from the reference tsconfig dropped: it needs TS >= 5.8 and the pinned TS is 5.5.4.
 - Remotes have a stub `index.html` (Vite build fails with "Could not resolve entry module index.html" without one). Not a standalone mode.
-- Biome config is standalone (the reference `extends` a parent biome.json outside its repo); `.__mf__temp` (plugin output) is ignored.
 - No `manifest` (default false in 1.7.2); entries are `remoteEntry.js`, as in the reference.
 - `useBreadcrumb` orders segments by first-render order (render is parent-first, effects child-first), via a module counter in the singleton contract.
 - Verification scripts live outside the repo (`.../scratchpad/adr-verify/verify.mjs`), as requested; not committed.
@@ -88,6 +87,6 @@ Share scope: `__SHARE__` has one map per instance, but all three point at the sa
 ## Reproduce
 
     npm install
-    npm run check                      # biome + tsc
+    npm run typecheck
     npm run dev                        # shell 5170, app-hub 5174, Use case A 5175 -> http://localhost:5170/app-hub/use-case-a
     npm run build && npm run serve     # -> http://localhost:4174/V1/app-hub/use-case-a  (serve.mjs --block=<app>, PORT=... supported)

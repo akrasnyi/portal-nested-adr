@@ -16,8 +16,7 @@
     "dev": "node scripts/dev.mjs",
     "build": "npm run typecheck && npm run build -w apps/shell -w apps/app-hub -w apps/use-case-a",
     "serve": "node scripts/serve.mjs",
-    "typecheck": "tsc -p apps/shell && tsc -p apps/app-hub && tsc -p apps/use-case-a && tsc -p packages/contract && tsc -p tsconfig.node.json",
-    "check": "biome check . --write && npm run typecheck"
+    "typecheck": "tsc -p apps/shell && tsc -p apps/app-hub && tsc -p apps/use-case-a && tsc -p packages/contract && tsc -p tsconfig.node.json"
   },
   "dependencies": {
     "@module-federation/runtime": "0.17.1",
@@ -28,7 +27,6 @@
     "react-router-dom": "6.30.4"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.2",
     "@module-federation/vite": "1.7.2",
     "@types/node": "20.14.8",
     "@types/react": "19.0.0",

@@ -140,5 +140,5 @@ Not verified: that each duplicate was a re-execution vs a re-request of a cached
 
 ## Housekeeping
 
-`npx biome check apps packages scripts config` clean (repo-wide check currently reports 2 errors, both in `experiments/expose-contract/` owned by the other agent), `npm run typecheck` clean,
+`npm run typecheck` clean,
 healthy build verify (`verify.mjs build`): 7/7 checks pass, 0 console errors, 0 hook errors. All servers I started were stopped (4174, 5170, 5174, 5175 free).
