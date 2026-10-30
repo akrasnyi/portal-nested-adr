@@ -13,10 +13,10 @@ export const router = createBrowserRouter(
       children: [
         { path: "/", element: <HomePage /> },
         {
-          path: "/app-hub/*",
+          path: "/app-host/*",
           element: (
-            <RequireModule moduleId="app-hub">
-              <RemoteBoundary id="appHub" load={() => loadRemoteApp("appHub")} />
+            <RequireModule moduleId="app-host">
+              <RemoteBoundary id="appHost" load={() => loadRemoteApp("appHost")} />
             </RequireModule>
           ),
         },

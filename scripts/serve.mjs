@@ -34,7 +34,7 @@ export const resolveRequest = (pathname) => {
   const m = pathname.match(/^\/V1\/mf\/([^/]+)\/(.*)$/);
   if (m) {
     const [, app, rest] = m;
-    if (blocked.has(app) || !["shell", "app-hub", "use-case-a"].includes(app)) return null;
+    if (blocked.has(app) || !["shell", "app-host", "use-case-a"].includes(app)) return null;
     const dist = path.join(root, "apps", app, "dist");
     const file = path.normalize(path.join(dist, rest));
     return file.startsWith(dist + path.sep) && isFile(file) ? file : null;

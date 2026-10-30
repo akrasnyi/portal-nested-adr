@@ -5,7 +5,7 @@ export const ModuleId = {
   Billing: "billing",
   Observability: "observability",
   Documentation: "documentation",
-  AppHub: "app-hub",
+  AppHost: "app-host",
 } as const;
 
 export type ModuleId = (typeof ModuleId)[keyof typeof ModuleId];

@@ -10,11 +10,11 @@ const resolveEntry = (entry: string) =>
 const registered = new Set<string>();
 const failures = new Map<string, number>();
 
-// Lazy: registered on the first render of the use-case route, not when App Hub mounts
+// Lazy: registered on the first render of the use-case route, not when App Host mounts
 export const loadUseCase = async (uc: UseCase): Promise<{ default: ComponentType }> => {
   // Evidence for docs/results.md: which runtime instance the module-level functions hit
   const g = globalThis as any;
-  g.__appHubProbe = {
+  g.__appHostProbe = {
     moduleLevelInstance: getInstance()?.name ?? null,
     instances: (g.__FEDERATION__?.__INSTANCES__ ?? []).map((i: any) => i.name),
   };

@@ -1,1 +1,1 @@
-{ "remotes": [{ "id": "appHub", "moduleId": "app-hub", "entry": "http://localhost:5174/remoteEntry.js" }] }
+{ "remotes": [{ "id": "appHost", "moduleId": "app-host", "entry": "http://localhost:5174/remoteEntry.js" }] }

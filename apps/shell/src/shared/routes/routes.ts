@@ -1,6 +1,6 @@
 export const ROUTES = {
   HOME: "/",
-  APP_HUB: "/app-hub",
+  APP_HOST: "/app-host",
 } as const;
 
 // Public URL prefix: "/V1" behind the API gateway, none in dev

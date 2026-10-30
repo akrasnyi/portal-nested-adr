@@ -1,4 +1,4 @@
-# ADR-0001: Nested Module Federation topology (shell → App Hub → use cases)
+# ADR-0001: Nested Module Federation topology (shell → App Host → use cases)
 
 - **Status:** Proposed
 - **Date:** 2026-10-30
@@ -6,9 +6,9 @@
 
 ## Context
 
-App Hub is a remote of the portal shell and, at the same time, the host of its own remotes, the use cases. Use case A is the first use case. The shell must not know Use case A exists; adding a use case should change App Hub only.
+App Host is a remote of the portal shell and, at the same time, the host of its own remotes, the use cases. Use case A is the first use case. The shell must not know Use case A exists; adding a use case should change App Host only.
 
-The risk: Use case A is loaded by App Hub, not by the shell. If any level gets its own copy of React, react-router, react-query or the shell's contract, we get "Invalid hook call", empty contexts, and a user who is "logged out" inside Use case A, often without any error at load time.
+The risk: Use case A is loaded by App Host, not by the shell. If any level gets its own copy of React, react-router, react-query or the shell's contract, we get "Invalid hook call", empty contexts, and a user who is "logged out" inside Use case A, often without any error at load time.
 
 A webpack spike by a colleague worked but needed the shell to list **itself** in `remotes` (self-remote), because on webpack the shell's `main.js` and `remoteEntry.js` have separate module caches. We had to know whether that applies to our stack.
 
@@ -16,7 +16,7 @@ A webpack spike by a colleague worked but needed the shell to list **itself** in
 
 ## Decision
 
-1. **Nested topology is supported.** App Hub registers its use cases at runtime (`registerRemotes` + `loadRemote`) from a typed `USE_CASES` list. The shell registers only App Hub. No build-time `remotes` anywhere.
+1. **Nested topology is supported.** App Host registers its use cases at runtime (`registerRemotes` + `loadRemote`) from a typed `USE_CASES` list. The shell registers only App Host. No build-time `remotes` anywhere.
 2. **The shell's contract is a shared singleton workspace package**, `@portal/contract`. It holds `AuthContext`, `useAuth`, `RequireModule`, `RemoteBoundary`, breadcrumbs and `ModuleId`. It is not exposed as `shell/contract`, and **no self-remote** is used.
 3. **`RemoteBoundary` lives in the contract** and is used at both levels. It resets after a failure when the location changes. After a failed entry load, the loader re-registers that remote with a cache-busting entry, so Retry works without a page reload.
 4. **`strictVersion: true` stays on** for every shared library.
@@ -35,9 +35,9 @@ Checked on the Use case A page. It is the same in dev and build.
 | User switched in the shell is shown in Use case A | PASS | PASS |
 | Use case A `navigate()` updates the shell's URL and breadcrumbs; Back works; deep-link reload works | PASS | PASS |
 | One React core file fetched; share scope has one provider (`portal_host`) | PASS | PASS |
-| User without App Hub access: redirected, **no** App Hub/Use case A request | PASS | PASS |
+| User without App Host access: redirected, **no** App Host/Use case A request | PASS | PASS |
 
-The runtime registered three instances, `[portal_host, appHub, useCaseA]`. App Hub's module-level `registerRemotes` hit App Hub's own instance, so no `getInstance` workaround was needed.
+The runtime registered three instances, `[portal_host, appHost, useCaseA]`. App Host's module-level `registerRemotes` hit App Host's own instance, so no `getInstance` workaround was needed.
 
 ### Is a self-remote needed on Vite? No, and the exposed contract is URL-fragile
 
@@ -56,30 +56,30 @@ The browser keys ES modules by URL, so on Vite the webpack duplicate does not ha
 
 | Scenario | Result |
 |---|---|
-| App Hub files missing | Shell fallback in the content area, header alive, **no Use case A request** |
-| Use case A files missing | App Hub fallback inside App Hub; sidebar and shell alive |
+| App Host files missing | Shell fallback in the content area, header alive, **no Use case A request** |
+| Use case A files missing | App Host fallback inside App Host; sidebar and shell alive |
 | Use case A files come back → Retry or navigate back | **Before:** stuck until full reload (the browser memoises a failed `import()` per URL). **After the fix:** `remoteEntry.js?retry=1` is requested and the page recovers. Share scope still has one React. |
-| Use case A throws during render | App Hub fallback only. **Before:** stuck on the same route. **After the fix:** recovers on navigation. |
-| Use case A requires React 19.1.0, shell has 19.0.0, `strictVersion: true` | Use case A refuses to load (`… does not satisfy the requirement of useCaseA …`), App Hub fallback, no second React |
+| Use case A throws during render | App Host fallback only. **Before:** stuck on the same route. **After the fix:** recovers on navigation. |
+| Use case A requires React 19.1.0, shell has 19.0.0, `strictVersion: true` | Use case A refuses to load (`… does not satisfy the requirement of useCaseA …`), App Host fallback, no second React |
 | Same mismatch with `strictVersion: false` | Only a console warning; Use case A **silently runs on the shell's React** |
 
 ### Cost of the extra level (cold load, production)
 
 | | localhost | +100 ms RTT |
 |---|---|---|
-| shell `remoteEntry` starts | +3..4 ms | +107 ms |
-| App Hub `remoteEntry` starts | +36..40 ms | +882..893 ms |
-| Use case A `remoteEntry` starts | +53..58 ms | +1213..1226 ms |
-| Use case A content visible | ~825 ms | ~1920 ms |
+| shell `remoteEntry` starts | +3..5 ms | +105..108 ms |
+| App Host `remoteEntry` starts | +37..45 ms | +882..913 ms |
+| Use case A `remoteEntry` starts | +55..66 ms | +1213..1250 ms |
+| Use case A content visible | ~820 ms | ~1930 ms |
 
 ## Alternatives considered
 
 | Option | Why not |
 |---|---|
-| **Flat**: the shell registers Use case A; App Hub is only a catalog | Simpler, with one hop fewer. But every new use case changes shell config. This remains the fallback if use cases turn out to be rare (see the open question). |
+| **Flat**: the shell registers Use case A; App Host is only a catalog | Simpler, with one hop fewer. But every new use case changes shell config. This remains the fallback if use cases turn out to be rare (see the open question). |
 | **Contract exposed as `shell/contract`** | Works on Vite, but identity depends on identical entry URLs at every consumer. We proved that a different origin spelling silently creates a second contract. |
 | **Self-remote (webpack approach)** | Not needed on Vite (same result as `local`). It adds a circular container graph, and the shell's own UI depends on loading its own entry. |
-| **Props through App Hub** | Every piece of shell state becomes an App Hub prop and needs an App Hub redeploy. |
+| **Props through App Host** | Every piece of shell state becomes an App Host prop and needs an App Host redeploy. |
 | **`strictVersion: false`** | A mismatched remote runs silently on the host's library. That turns a clear load failure into potential subtle runtime bugs. |
 
 ## Consequences
@@ -87,14 +87,14 @@ The browser keys ES modules by URL, so on Vite the webpack duplicate does not ha
 **Positive**
 - A new use case is one `USE_CASES` entry plus a new remote. The shell is untouched.
 - One React, router, query cache and session on the page, proven in dev and build.
-- A broken or missing use case is contained inside App Hub. A missing App Hub never downloads Use case A. Access is checked before anything is requested.
+- A broken or missing use case is contained inside App Host. A missing App Host never downloads Use case A. Access is checked before anything is requested.
 
 **Negative / to handle**
 - **Extra serial hop.** About 0.33 s more per level at 100 ms RTT. Mitigation if it matters: `preloadRemote` when the use-case link is hovered or focused.
 - **Bundled fallback copies.** Plugin 1.7.2 has no `shared.import: false`, so every remote bundles fallback copies of the shared libraries, including the contract. They are not requested at runtime, but they make remote `dist` bigger. Newer plugin versions support `import: false`.
 - **Lock-step upgrades.** Exact versions plus `strictVersion` mean every remote must be rebuilt in the same release when React, the router, react-query or the contract changes. Plan contract changes as additive. Bump versions in one coordinated release.
 - **Version mismatch is invisible to the user.** They see only "unavailable", and the cause is console-only. The error-reporting hook (`onRemoteError`) must report the runtime error message.
-- **Retry logic is duplicated.** It is in the shell loader and the App Hub loader. In production code, move it into one helper next to the loaders.
+- **Retry logic is duplicated.** It is in the shell loader and the App Host loader. In production code, move it into one helper next to the loaders.
 
 ## Open questions
 

@@ -5,7 +5,7 @@ export const USE_CASES = [
     remoteId: "useCaseA",
     path: "use-case-a",
     title: "Use case A",
-    subtitle: "Example use case loaded by App Hub.",
+    subtitle: "Example use case loaded by App Host.",
     entry: import.meta.env.DEV ? "http://localhost:5175/remoteEntry.js" : "mf/use-case-a/remoteEntry.js",
   },
 ] as const;

@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const vite = path.join(root, "node_modules/.bin/vite");
-const kids = ["use-case-a", "app-hub", "shell"].map((app) =>
+const kids = ["use-case-a", "app-host", "shell"].map((app) =>
   spawn(vite, [], { cwd: path.join(root, "apps", app), stdio: "inherit" }),
 );
 const stop = () => {

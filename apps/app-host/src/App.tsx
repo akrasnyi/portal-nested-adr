@@ -4,7 +4,7 @@ import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { loadUseCase } from "./load-use-case";
 import { USE_CASES } from "./use-cases";
 
-import "./app-hub.css";
+import "./app-host.css";
 
 const Catalog = () => (
   <section>
@@ -20,11 +20,11 @@ const Catalog = () => (
 );
 
 export default function App() {
-  useBreadcrumb("App Hub");
+  useBreadcrumb("App Host");
   return (
-    <div className="app-hub">
+    <div className="app-host">
       <aside>
-        <h2>App Hub</h2>
+        <h2>App Host</h2>
         <ul>
           <li>
             <Link to=".">Catalog</Link>

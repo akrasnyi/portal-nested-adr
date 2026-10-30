@@ -1,1 +1,1 @@
-{ "remotes": [{ "id": "appHub", "moduleId": "app-hub", "entry": "mf/app-hub/remoteEntry.js" }] }
+{ "remotes": [{ "id": "appHost", "moduleId": "app-host", "entry": "mf/app-host/remoteEntry.js" }] }

@@ -17,7 +17,7 @@ export const PortalLayout = () => {
       <header className="portal-header">
         <strong>Portal shell</strong>
         <Link to={ROUTES.HOME}>Home</Link>
-        <Link to={ROUTES.APP_HUB}>App Hub</Link>
+        <Link to={ROUTES.APP_HOST}>App Host</Link>
         <label>
           User{" "}
           <select data-testid="user-select" value={key} onChange={(e) => setKey(e.target.value)}>
