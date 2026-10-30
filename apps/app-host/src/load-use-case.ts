@@ -4,7 +4,7 @@ import type { RemoteModule } from "@portal/contract";
 import type { UseCase } from "./use-cases";
 
 const stagePrefix = () => (import.meta.env.DEV ? "" : "/V1");
-const resolveEntry = (entry: string) =>
+export const resolveEntry = (entry: string) =>
   /^https?:\/\//.test(entry) ? entry : new URL(entry, `${window.location.origin}${stagePrefix()}/`).href;
 
 const registered = new Set<string>();

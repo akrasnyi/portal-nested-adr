@@ -24,7 +24,13 @@ The nested topology works on Vite 5 + `@module-federation/vite` 1.7.2, in both `
   - **Retry after a failed entry needed a fix.** The browser memoises a failed `import()`. The loader now re-registers the remote with a cache-busting URL.
   - **The error boundary got stuck after navigation.** Fixed: it now resets when the location changes.
   - **Cold Vite dev cache, dev only.** The first load is interrupted once by the dependency optimizer's reload.
-- **Not covered:** declaring Use case A as a build-time `remotes` entry in App Host's config (we use the runtime API by design).
+- **Build-time `remotes` works too.** App Host can declare Use case A in its federation config and use `import("useCaseA/App")`, still unknown to the shell. All checks pass in dev and build. Trade-offs versus the runtime API:
+  - the entry is fetched **eagerly**, as soon as App Host loads, even on its catalog page;
+  - the entry URL is baked into App Host's build;
+  - each remote needs a hand-written `declare module`;
+  - a failed static import never recovers on its own, and needs a runtime `registerRemotes({ force: true })` fallback.
+
+  We keep the runtime API as the default ([results](docs/results-static-remotes.md)).
 
 Details: [ADR-0001](docs/adr/0001-nested-topology.md#spike-result-works).
 
@@ -103,6 +109,7 @@ An earlier spike built the same nested topology (shell → dashboard → widget)
 | `node scripts/serve.mjs --block=<shell\|app-host\|use-case-a>` | 404 for that app's files |
 | Use case A route `crash` (link on the Use case A dashboard) | Use case A throws during render |
 | `UCA_REACT_REQUIRED=19.1.0` (+ `UCA_STRICT=false`) when building `apps/use-case-a` | Version-mismatch experiment |
+| `APP_HOST_STATIC_REMOTES=1` when building or running `apps/app-host` | Use case A as a build-time `remotes` entry and `import("useCaseA/App")` instead of the runtime API ([results](docs/results-static-remotes.md)) |
 | `CONTRACT_MODE=local\|self` (+ `SELF_URL`, `BIND`) in `experiments/expose-contract/*` | Exposed-contract comparison |
 | `node experiments/separate-repos/setup.mjs …`, `VITE_USE_CASE_B=1`, `serve.mjs --mount=use-case-b=<dist>` | Separate-repos experiments (see [its README](experiments/separate-repos/README.md)) |
 
