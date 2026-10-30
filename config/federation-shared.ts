@@ -15,11 +15,16 @@ const installedVersion = (key: string) => {
     .version as string;
 };
 
-// Must be identical in the shell and every remote.
+// Libraries: exact and identical in the shell and every remote.
 // react-router holds the router contexts that react-router-dom re-exports, so both are shared
-export const federationShared = Object.fromEntries(
-  ["react", "react-dom", "react-router", "react-router-dom", "@tanstack/react-query", "@portal/contract"].map((key) => [
-    key,
-    { singleton: true, strictVersion: true, requiredVersion: installedVersion(key) },
-  ]),
-);
+const exact = ["react", "react-dom", "react-router", "react-router-dom", "@tanstack/react-query"];
+
+// The contract follows semver, so a remote accepts any shell contract with the same major that is
+// at least the version it was built against (docs/adr/0002-type-sharing.md)
+export const federationShared = Object.fromEntries([
+  ...exact.map((key) => [key, { singleton: true, strictVersion: true, requiredVersion: installedVersion(key) }]),
+  [
+    "@portal/contract",
+    { singleton: true, strictVersion: true, requiredVersion: `^${installedVersion("@portal/contract")}` },
+  ],
+]);

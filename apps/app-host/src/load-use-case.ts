@@ -1,5 +1,5 @@
 import { getInstance, loadRemote, registerRemotes } from "@module-federation/runtime";
-import type { ComponentType } from "react";
+import type { RemoteModule } from "@portal/contract";
 
 import type { UseCase } from "./use-cases";
 
@@ -11,7 +11,7 @@ const registered = new Set<string>();
 const failures = new Map<string, number>();
 
 // Lazy: registered on the first render of the use-case route, not when App Host mounts
-export const loadUseCase = async (uc: UseCase): Promise<{ default: ComponentType }> => {
+export const loadUseCase = async (uc: UseCase): Promise<RemoteModule> => {
   // Evidence for docs/results.md: which runtime instance the module-level functions hit
   const g = globalThis as any;
   g.__appHostProbe = {
@@ -22,9 +22,9 @@ export const loadUseCase = async (uc: UseCase): Promise<{ default: ComponentType
     registerRemotes([{ name: uc.remoteId, entry: resolveEntry(uc.entry), type: "module" }]);
     registered.add(uc.remoteId);
   }
-  let mod: { default: ComponentType } | null;
+  let mod: RemoteModule | null;
   try {
-    mod = await loadRemote<{ default: ComponentType }>(`${uc.remoteId}/App`);
+    mod = await loadRemote<RemoteModule>(`${uc.remoteId}/App`);
   } catch (e) {
     // The browser memoises a failed import() per URL: the next attempt needs a new entry URL
     const n = (failures.get(uc.remoteId) ?? 0) + 1;

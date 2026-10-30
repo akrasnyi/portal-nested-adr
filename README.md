@@ -1,15 +1,17 @@
 # Portal nested federation spike
 
-Proof for **[ADR-0001: nested Module Federation topology](docs/adr/0001-nested-topology.md)**: shell → App Host → Use case A on Vite 5 + `@module-federation/vite` 1.7.2. The structure mirrors our production portal: layers, `federationShared`, `RemoteBoundary`, runtime remotes from `config.json`, roles → modules, and the URL contract. Auth is stubbed and there is no design system.
+Proof for **[ADR-0001: nested Module Federation topology](docs/adr/0001-nested-topology.md)** and **[ADR-0002: sharing types between repos](docs/adr/0002-type-sharing.md)**: shell → App Host → Use case A on Vite 5 + `@module-federation/vite` 1.7.2. The structure mirrors our production portal: layers, `federationShared`, `RemoteBoundary`, runtime remotes from `config.json`, roles → modules, and the URL contract. Auth is stubbed and there is no design system.
 
 ```
 apps/shell     host, :5170    routes /app-host/* → App Host (guarded by RequireModule)
 apps/app-host   remote + host, :5174   USE_CASES → catalog, sidebar, routes; registers Use case A at runtime
 apps/use-case-a  remote, :5175  nested routes + ProofPanel (identity checks)
 packages/contract   @portal/contract: auth, RequireModule, RemoteBoundary, breadcrumbs (shared singleton)
-config/federation-shared.ts   singleton + strictVersion + exact versions
+config/federation-shared.ts   singleton + strictVersion; exact library versions, ^range for the contract
 scripts/serve.mjs   production single-origin server :4174 (/V1/mf/<app>/ → files, other /V1/* → shell)
+scripts/pack-contract.mjs   builds @portal/contract to dist + .d.ts and packs it as a "published" tarball
 experiments/expose-contract   comparison: exposed shell/contract, local vs self-remote
+experiments/separate-repos    remotes in real separate repos (sandbox outside this repo): types, versions, dts-plugin
 docs/          ADR, evidence, screenshots
 ```
 
@@ -41,6 +43,17 @@ Every answer was checked in both `vite dev` and the production build. "Evidence"
 | 10 | Does access control prevent loading? | **Yes.** A user without App Host access is redirected before any App Host or Use case A file is requested. | [results.md](docs/results.md) |
 | 11 | What does the extra level cost? | One serial `remoteEntry` hop: about +0.33 s per level at 100 ms RTT, cold load. | [ADR](docs/adr/0001-nested-topology.md) |
 
+### Types across separate repositories
+
+These answers come from remotes built in real separate repos, in a sandbox outside this repo, against a contract "published" with `npm pack`.
+
+| # | Question | Answer | Evidence |
+|---|---|---|---|
+| 12 | How does a remote in another repo get the shell's types? | **From the versioned `@portal/contract` npm package** (`dist` + `.d.ts`). The same package is the runtime singleton, so the types and the runtime are always the same version. Wrong usage fails `tsc`. | [ADR-0002](docs/adr/0002-type-sharing.md) |
+| 13 | Does a remote from another repo still share the shell's contract at runtime? | **Yes.** Same `AuthContext` and user, one contract provider (`portal_host`). | [results-types.md](docs/results-types.md) |
+| 14 | Does every contract change force a release of all remotes? | **Only with exact versions.** With `^<installed>` on the contract, a minor bump in the shell is picked up by old remotes. A major, or a remote needing a newer minor than the shell has, is a contained failure. Start at 1.0.0, because 0.x carets reject minor bumps. | [results-types.md](docs/results-types.md) |
+| 15 | Can plugin 1.7.2 propagate types of what a remote exposes (like newer versions do)? | **Not built in.** Its `dts` option does nothing. The standalone `@module-federation/dts-plugin@0.17.1` works by hand (about 40 lines of glue). But it exits 0 when a remote is unreachable, and its types go stale silently. Our `./App` has no props, so it isn't needed today. | [results-types.md](docs/results-types.md) |
+
 ## Main differences from the webpack variant
 
 An earlier spike built the same nested topology (shell → dashboard → widget) on webpack 5. Both spikes agree on the core mechanism: the middle host hands the share scope it got from the shell to its own remotes, so shared singletons resolve to the shell's copy at any depth. Descendant relative routes work the same way. The differences:
@@ -53,8 +66,8 @@ An earlier spike built the same nested topology (shell → dashboard → widget)
 | Why the self-remote was needed | Shell `main.js` and `remoteEntry.js` are two webpack runtimes with two module caches, so a local import creates a second store | Not needed: ES modules are keyed by URL, so local and exposed imports evaluate once (tested) |
 | Leaf knows the root | The widget lists `shell` in its `remotes`; it can't run without the shell's URL | The leaf imports a package; it doesn't know any URL of the shell |
 | Container graph | Circular: shell → dashboard → widget → shell | Acyclic: shell → App Host → Use case A |
-| Contract types | Hand-written `.d.ts`, because generated types can't follow a cycle | Ordinary TypeScript types from the package |
-| Versions | `strictVersion: false`, `^` ranges | `strictVersion: true`, exact versions (mismatch is a contained load failure) |
+| Contract types | Hand-written `.d.ts`, because generated types can't follow a cycle | Ordinary TypeScript types from the package; in separate repos, the published package (ADR-0002) |
+| Versions | `strictVersion: false`, `^` ranges | `strictVersion: true`; exact library versions, `^<installed>` for the contract (mismatch is a contained load failure) |
 | Origins | One origin per app, `publicPath: 'auto'` | One origin in production: `/V1/mf/<app>/` for files, everything else goes to the shell |
 | Failure handling | Per-widget error boundary plus a hand-written promise cache | `RemoteBoundary` in the contract, used at both levels; resets on navigation; retries a failed entry with a cache-busting URL |
 | Verified in | Dev build | Dev and production build; checks are visible in the page (ProofPanel) |
@@ -78,5 +91,6 @@ An earlier spike built the same nested topology (shell → dashboard → widget)
 | Use case A route `crash` (link on the Use case A dashboard) | Use case A throws during render |
 | `UCA_REACT_REQUIRED=19.1.0` (+ `UCA_STRICT=false`) when building `apps/use-case-a` | Version-mismatch experiment |
 | `CONTRACT_MODE=local\|self` (+ `SELF_URL`, `BIND`) in `experiments/expose-contract/*` | Exposed-contract comparison |
+| `node experiments/separate-repos/setup.mjs …`, `VITE_USE_CASE_B=1`, `serve.mjs --mount=use-case-b=<dist>` | Separate-repos experiments (see [its README](experiments/separate-repos/README.md)) |
 
 Rebuild Use case A normally after the version experiment: `cd apps/use-case-a && ../../node_modules/.bin/vite build`.

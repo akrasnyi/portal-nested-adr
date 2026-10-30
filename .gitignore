@@ -4,3 +4,4 @@ dist
 .DS_Store
 *.tsbuildinfo
 .__mf__temp
+.pack-staging

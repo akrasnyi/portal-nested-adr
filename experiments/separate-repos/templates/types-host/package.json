@@ -1,0 +1,17 @@
+{
+  "name": "types-host",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "consume": "node consume-types.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": { "@module-federation/runtime": "0.17.1", "react": "19.0.0", "react-dom": "19.0.0" },
+  "devDependencies": {
+    "@module-federation/dts-plugin": "0.17.1",
+    "@types/react": "19.0.0",
+    "@types/react-dom": "19.0.0",
+    "typescript": "5.5.4"
+  }
+}

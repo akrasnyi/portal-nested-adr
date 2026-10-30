@@ -8,6 +8,6 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@portal/contract": "0.1.0"
+    "@portal/contract": "1.0.0"
   }
 }

@@ -1,7 +1,11 @@
 import { Component, type ComponentType, lazy, Suspense } from "react";
 import { useLocation } from "react-router-dom";
 
-type Load = () => Promise<{ default: ComponentType }>;
+// What every remote's "./App" exposes: loaders type loadRemote<RemoteModule>(...), remotes type their default export as RemoteApp
+export type RemoteApp = ComponentType;
+export type RemoteModule = { default: RemoteApp };
+
+type Load = () => Promise<RemoteModule>;
 
 // One lazy component per remote id so re-renders don't refetch
 const lazyRemotes = new Map<string, ReturnType<typeof lazy>>();

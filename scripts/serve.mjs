@@ -9,6 +9,8 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const blocked = new Set(process.argv.filter((a) => a.startsWith("--block=")).map((a) => a.slice(8)));
+// --mount=<app>=<abs dist dir> (repeatable) also serves a build from outside this repo under /V1/mf/<app>/
+const mounts = new Map(process.argv.filter((a) => a.startsWith("--mount=")).map((a) => a.slice(8).split("=")));
 const port = Number(process.env.PORT) || 4174;
 const types = {
   ".html": "text/html; charset=utf-8",
@@ -34,8 +36,8 @@ export const resolveRequest = (pathname) => {
   const m = pathname.match(/^\/V1\/mf\/([^/]+)\/(.*)$/);
   if (m) {
     const [, app, rest] = m;
-    if (blocked.has(app) || !["shell", "app-host", "use-case-a"].includes(app)) return null;
-    const dist = path.join(root, "apps", app, "dist");
+    if (blocked.has(app) || !(["shell", "app-host", "use-case-a"].includes(app) || mounts.has(app))) return null;
+    const dist = mounts.get(app) ?? path.join(root, "apps", app, "dist");
     const file = path.normalize(path.join(dist, rest));
     return file.startsWith(dist + path.sep) && isFile(file) ? file : null;
   }

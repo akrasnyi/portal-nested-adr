@@ -1,5 +1,5 @@
 import { loadRemote, registerRemotes } from "@module-federation/runtime";
-import type { ComponentType } from "react";
+import type { RemoteModule } from "@portal/contract";
 
 import { getRuntimeConfig } from "@/shared/config/runtime-config";
 
@@ -13,10 +13,10 @@ export const initFederation = () => {
 
 const failures = new Map<string, number>();
 
-export const loadRemoteApp = async (id: string): Promise<{ default: ComponentType }> => {
-  let mod: { default: ComponentType } | null;
+export const loadRemoteApp = async (id: string): Promise<RemoteModule> => {
+  let mod: RemoteModule | null;
   try {
-    mod = await loadRemote<{ default: ComponentType }>(`${id}/App`);
+    mod = await loadRemote<RemoteModule>(`${id}/App`);
   } catch (e) {
     // The browser memoises a failed import() per URL: the next attempt needs a new entry URL
     const n = (failures.get(id) ?? 0) + 1;

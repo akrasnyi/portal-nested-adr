@@ -19,7 +19,7 @@ A webpack spike by a colleague worked but needed the shell to list **itself** in
 1. **Nested topology is supported.** App Host registers its use cases at runtime (`registerRemotes` + `loadRemote`) from a typed `USE_CASES` list. The shell registers only App Host. No build-time `remotes` anywhere.
 2. **The shell's contract is a shared singleton workspace package**, `@portal/contract`. It holds `AuthContext`, `useAuth`, `RequireModule`, `RemoteBoundary`, breadcrumbs and `ModuleId`. It is not exposed as `shell/contract`, and **no self-remote** is used.
 3. **`RemoteBoundary` lives in the contract** and is used at both levels. It resets after a failure when the location changes. After a failed entry load, the loader re-registers that remote with a cache-busting entry, so Retry works without a page reload.
-4. **`strictVersion: true` stays on** for every shared library.
+4. **`strictVersion: true` stays on** for every shared library. Libraries use exact versions. The contract uses a semver range; see [ADR-0002](0002-type-sharing.md).
 
 ## Evidence
 
@@ -92,7 +92,7 @@ The browser keys ES modules by URL, so on Vite the webpack duplicate does not ha
 **Negative / to handle**
 - **Extra serial hop.** About 0.33 s more per level at 100 ms RTT. Mitigation if it matters: `preloadRemote` when the use-case link is hovered or focused.
 - **Bundled fallback copies.** Plugin 1.7.2 has no `shared.import: false`, so every remote bundles fallback copies of the shared libraries, including the contract. They are not requested at runtime, but they make remote `dist` bigger. Newer plugin versions support `import: false`.
-- **Lock-step upgrades.** Exact versions plus `strictVersion` mean every remote must be rebuilt in the same release when React, the router, react-query or the contract changes. Plan contract changes as additive. Bump versions in one coordinated release.
+- **Lock-step upgrades for libraries.** Exact versions plus `strictVersion` mean every remote must be rebuilt in the same release when React, the router or react-query changes. The contract avoids this with `^<installed>` ranges and semver ([ADR-0002](0002-type-sharing.md)).
 - **Version mismatch is invisible to the user.** They see only "unavailable", and the cause is console-only. The error-reporting hook (`onRemoteError`) must report the runtime error message.
 - **Retry logic is duplicated.** It is in the shell loader and the App Host loader. In production code, move it into one helper next to the loaders.
 
