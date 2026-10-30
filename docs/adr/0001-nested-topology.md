@@ -14,6 +14,13 @@ A webpack spike by a colleague worked but needed the shell to list **itself** in
 
 **Stack tested:** Vite 5.4.14, `@module-federation/vite` 1.7.2 (runtime 0.17.1), React 19.0.0, react-router-dom 6.30.4, react-query 5.90.2. All shared as `singleton` + `strictVersion` + exact versions. Both `vite dev` and production build were checked. The build was served from one origin with our URL contract (`/V1/mf/<app>/`).
 
+## Spike result: **works**
+
+- **Approach:** App Host is a remote of the shell and a host of Use case A. It registers Use case A at runtime (`registerRemotes` + `loadRemote` from `@module-federation/runtime`); the shell never declares it. React, react-dom, react-router(-dom), react-query and `@portal/contract` are shared singletons with `strictVersion`.
+- **Outcome:** in both `vite dev` and the production build, Use case A gets the shell's React, QueryClient, router and `AuthContext`. Only one React core file is fetched. A user switch in the shell reaches Use case A. Nested navigation updates the shell's URL and history.
+- **Note on the "fallback" category:** we load remotes through the runtime API **by design**, as the production portal already does, not as a workaround. Declaring Use case A as a build-time `remotes` entry in App Host's config was not tested. A build-time remote one level down (leaf → `shellx/contract`) worked in the exposed-contract experiment.
+- **Problems found:** (1) after a failed entry load the browser memoises the failed `import()`, so Retry needed a cache-busting re-registration (fixed); (2) the boundary stayed in its error state after navigation (fixed); (3) on a cold Vite dev cache, the first page load is interrupted once by the dependency optimizer's reload ("optimized dependencies changed. reloading"). Dev-only; the next load works.
+
 ## Decision
 
 1. **Nested topology is supported.** App Host registers its use cases at runtime (`registerRemotes` + `loadRemote`) from a typed `USE_CASES` list. The shell registers only App Host. No build-time `remotes` anywhere.
