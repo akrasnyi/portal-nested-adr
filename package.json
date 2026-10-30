@@ -1,0 +1,41 @@
+{
+  "name": "portal-nested-adr",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.22.0",
+    "npm": ">=10.9.2"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "experiments/*/*"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "npm run typecheck && npm run build -w apps/shell -w apps/app-hub -w apps/use-case-a",
+    "serve": "node scripts/serve.mjs",
+    "typecheck": "tsc -p apps/shell && tsc -p apps/app-hub && tsc -p apps/use-case-a && tsc -p packages/contract && tsc -p tsconfig.node.json",
+    "check": "biome check . --write && npm run typecheck"
+  },
+  "dependencies": {
+    "@module-federation/runtime": "0.17.1",
+    "@tanstack/react-query": "5.90.2",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "react-router": "6.30.4",
+    "react-router-dom": "6.30.4"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.2",
+    "@module-federation/vite": "1.7.2",
+    "@types/node": "20.14.8",
+    "@types/react": "19.0.0",
+    "@types/react-dom": "19.0.0",
+    "@vitejs/plugin-react": "4.3.3",
+    "babel-plugin-react-compiler": "19.1.0-rc.3",
+    "typescript": "5.5.4",
+    "vite": "5.4.14"
+  }
+}

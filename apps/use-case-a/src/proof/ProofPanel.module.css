@@ -1,0 +1,23 @@
+.panel {
+  margin-top: 16px;
+}
+.table {
+  border-collapse: collapse;
+}
+.table td,
+.table th {
+  border: 1px solid #ccc;
+  padding: 4px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+.pass {
+  background: #d1fae5;
+  color: #065f46;
+  font-weight: bold;
+}
+.fail {
+  background: #fee2e2;
+  color: #991b1b;
+  font-weight: bold;
+}

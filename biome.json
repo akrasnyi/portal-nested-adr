@@ -1,0 +1,12 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.2/schema.json",
+  "files": { "includes": ["**", "!**/dist", "!docs", "!**/.__mf__temp"] },
+  "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 120 },
+  "linter": {
+    "rules": {
+      "correctness": { "noUnusedVariables": "warn", "noUnusedImports": "warn" },
+      "suspicious": { "noArrayIndexKey": "error", "noExplicitAny": "off" },
+      "style": { "noNonNullAssertion": "off" }
+    }
+  }
+}

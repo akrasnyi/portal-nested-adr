@@ -1,0 +1,12 @@
+.app-hub {
+  display: flex;
+  gap: 24px;
+}
+.app-hub aside {
+  min-width: 180px;
+  border-right: 1px solid #ccc;
+  padding-right: 16px;
+}
+.app-hub .content {
+  flex: 1;
+}
