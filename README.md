@@ -15,6 +15,19 @@ experiments/separate-repos    remotes in real separate repos (sandbox outside th
 docs/          ADR, evidence, screenshots
 ```
 
+## Verdict: **works**
+
+The nested topology works on Vite 5 + `@module-federation/vite` 1.7.2, in both `vite dev` and the production build. Use case A is loaded by App Host, which the shell loads, and it gets the shell's React (one core file fetched), QueryClient, router and session. A user switch in the shell reaches Use case A. Nested navigation keeps the shell's URL and history intact.
+
+- **Approach:** remotes are registered with the runtime API (`registerRemotes` + `loadRemote`) at both levels; the shell never declares Use case A. Shared singletons use `strictVersion`. The shell's contract is a shared singleton package, with no self-remote.
+- **Problems found:**
+  - **Retry after a failed entry needed a fix.** The browser memoises a failed `import()`. The loader now re-registers the remote with a cache-busting URL.
+  - **The error boundary got stuck after navigation.** Fixed: it now resets when the location changes.
+  - **Cold Vite dev cache, dev only.** The first load is interrupted once by the dependency optimizer's reload.
+- **Not covered:** declaring Use case A as a build-time `remotes` entry in App Host's config (we use the runtime API by design).
+
+Details: [ADR-0001](docs/adr/0001-nested-topology.md#spike-result-works).
+
 ## Run
 
 ```bash
