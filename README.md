@@ -1,6 +1,6 @@
 # Portal nested federation spike
 
-Proof for **[ADR-0001: nested Module Federation topology](docs/adr/0001-nested-topology.md)**: shell → App Hub → Use case A on Vite 5 + `@module-federation/vite` 1.7.2. The structure mirrors our production portal: layers, `federationShared`, `RemoteBoundary`, runtime remotes from `config.json`, roles → modules, and the URL contract. Auth is stubbed and there is no design system.
+Proof for **[ADR-0001: nested Module Federation topology](docs/adr/0001-nested-topology.md)**: shell → App Host→ Use case A on Vite 5 + `@module-federation/vite` 1.7.2. The structure mirrors our production portal: layers, `federationShared`, `RemoteBoundary`, runtime remotes from `config.json`, roles → modules, and the URL contract. Auth is stubbed and there is no design system.
 
 ```
 apps/shell     host, :5170    routes /app-hub/* → App Hub (guarded by RequireModule)
