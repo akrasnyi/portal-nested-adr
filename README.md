@@ -23,6 +23,42 @@ npm run build && npm run serve   # http://localhost:4174/V1/app-Host/use-case-a
 
 Pick a user with `?user=admin|usecase|billing|noroles`, or use the select in the header.
 
+## Questions this spike answers
+
+Every answer was checked in both `vite dev` and the production build. "Evidence" points to the full results.
+
+| # | Question | Answer | Evidence |
+|---|---|---|---|
+| 1 | Does a remote loaded by another remote (shell → App Hub → Use case A) get the shell's React, react-router, QueryClient and session, or does each level bring its own copy? | **The shell's.** There is one React on the page and one provider in the share scope. Router, query cache and `AuthContext` are identical three levels down. | [results.md](docs/results.md) |
+| 2 | Does a user switch in the shell reach the leaf? Does leaf navigation update the shell's URL and history? | **Yes, both.** Back and deep-link reload work too. | [results.md](docs/results.md) |
+| 3 | Can the leaf contribute to the shell's layout? | **Yes.** It adds breadcrumb segments through the contract (`Home › App Hub › Use case A › Report 42`). | [results.md](docs/results.md) |
+| 4 | Can App Hub register its remotes at runtime without the shell knowing them? Which federation instance does it use? | **Yes.** `registerRemotes` / `loadRemote` hit App Hub's own instance, and three instances are registered. No `getInstance` workaround is needed. | [results.md](docs/results.md) |
+| 5 | How should shell-owned state and contracts reach a remote two levels down? | **As a shared singleton package** (`@portal/contract`). Its identity comes from the share scope, not from a URL. | [ADR](docs/adr/0001-nested-topology.md) |
+| 6 | Is the self-remote trick needed on Vite? | **No.** The host's local import and the exposed module evaluate once. But an exposed contract duplicates silently if one consumer spells the URL differently. | [results-expose-contract.md](docs/results-expose-contract.md) |
+| 7 | Is a broken or missing remote contained at the level that loads it? | **Yes.** If App Hub is missing, Use case A is never requested. If Use case A is missing or throws, the fallback appears only inside App Hub. | [results-failures.md](docs/results-failures.md) |
+| 8 | Can a failed remote recover without a page reload? | **Not out of the box.** The browser memoises a failed `import()`. **Fixed:** the loader re-registers the remote with `?retry=n`, and the boundary resets on navigation. | [results-failures.md](docs/results-failures.md) |
+| 9 | What does `strictVersion` buy? | A version mismatch becomes a contained load failure. Without it, the remote silently runs on the host's React. | [results-failures.md](docs/results-failures.md) |
+| 10 | Does access control prevent loading? | **Yes.** A user without App Hub access is redirected before any App Hub or Use case A file is requested. | [results.md](docs/results.md) |
+| 11 | What does the extra level cost? | One serial `remoteEntry` hop: about +0.33 s per level at 100 ms RTT, cold load. | [ADR](docs/adr/0001-nested-topology.md) |
+
+## Main differences from the webpack variant
+
+An earlier spike built the same nested topology (shell → dashboard → widget) on webpack 5. Both spikes agree on the core mechanism: the middle host hands the share scope it got from the shell to its own remotes, so shared singletons resolve to the shell's copy at any depth. Descendant relative routes work the same way. The differences:
+
+| | webpack variant | This spike (Vite) |
+|---|---|---|
+| Bundler / federation | webpack 5 `ModuleFederationPlugin` | Vite 5 + `@module-federation/vite` 1.7.2 (runtime 0.17.1) |
+| How remotes are declared | Static build-time `remotes` in shell and dashboard; a new widget needs a rebuild | Runtime `registerRemotes`: the shell reads `config.json`, App Hub reads its `USE_CASES` list |
+| Shell-owned state | The shell `exposes` a store **and lists itself in `remotes`**, so its own UI imports `shell/store` through its container | Shared singleton workspace package `@portal/contract`; nobody imports through the shell's container |
+| Why the self-remote was needed | Shell `main.js` and `remoteEntry.js` are two webpack runtimes with two module caches, so a local import creates a second store | Not needed: ES modules are keyed by URL, so local and exposed imports evaluate once (tested) |
+| Leaf knows the root | The widget lists `shell` in its `remotes`; it can't run without the shell's URL | The leaf imports a package; it doesn't know any URL of the shell |
+| Container graph | Circular: shell → dashboard → widget → shell | Acyclic: shell → App Hub → Use case A |
+| Contract types | Hand-written `.d.ts`, because generated types can't follow a cycle | Ordinary TypeScript types from the package |
+| Versions | `strictVersion: false`, `^` ranges | `strictVersion: true`, exact versions (mismatch is a contained load failure) |
+| Origins | One origin per app, `publicPath: 'auto'` | One origin in production: `/V1/mf/<app>/` for files, everything else goes to the shell |
+| Failure handling | Per-widget error boundary plus a hand-written promise cache | `RemoteBoundary` in the contract, used at both levels; resets on navigation; retries a failed entry with a cache-busting URL |
+| Verified in | Dev build | Dev and production build; checks are visible in the page (ProofPanel) |
+
 ## Demo script (about 10 minutes)
 
 1. **The question.** Open `http://localhost:4174/V1/app-Host/use-case-a`. Use case A is loaded by App Host, and the shell has never heard of it. Do Use case A and the shell share React, the router, the query cache and the session?
