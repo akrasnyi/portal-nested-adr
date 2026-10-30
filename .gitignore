@@ -5,3 +5,7 @@ dist
 *.tsbuildinfo
 .__mf__temp
 .pack-staging
+
+# local only: list of terms that must not appear in this public repo
+.claude/forbidden-terms.local
+.claude/settings.local.json
