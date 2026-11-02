@@ -2,7 +2,7 @@ import { type RemoteApp, useAuth, useBreadcrumb } from "@portal/contract";
 
 import { ProofPanel } from "./proof/ProofPanel";
 
-// Typed as RemoteApp: the same type the loaders use in loadRemote<RemoteModule>("useCaseB/App")
+// Typed as RemoteApp: the same type App Host gives import("useCaseB/App") (RemoteModule, apps/app-host/src/remotes.d.ts)
 const App: RemoteApp = () => {
   useBreadcrumb("Use case B");
   const { user } = useAuth();

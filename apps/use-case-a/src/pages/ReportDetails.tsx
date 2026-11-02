@@ -9,6 +9,7 @@ export const ReportDetails = () => {
   return (
     <>
       <h2>Report {reportId}</h2>
+      {/* FR-10: Link back to the index route */}
       <Link to="..">Back to dashboard</Link>
       <ProofPanel />
     </>

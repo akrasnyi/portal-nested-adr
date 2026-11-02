@@ -20,6 +20,7 @@ export const PortalLayout = () => {
         <Link to={ROUTES.APP_HOST}>App Host</Link>
         <label>
           User{" "}
+          {/* FR-04: fake user switch; shell-user below re-renders with the new name */}
           <select data-testid="user-select" value={key} onChange={(e) => setKey(e.target.value)}>
             {TEST_USER_KEYS.map((k) => (
               <option key={k} value={k}>
@@ -32,6 +33,7 @@ export const PortalLayout = () => {
         <span>
           path: <code data-testid="shell-pathname">{pathname}</code>
         </span>
+        {/* FR-05 / FR-11a: breadcrumbs from the layout context. TODO FR-05 / FR-11b: no #shell-breadcrumbs DOM mount node for portals */}
         <nav data-testid="breadcrumbs">{crumbs.join(" > ")}</nav>
       </header>
       <main>

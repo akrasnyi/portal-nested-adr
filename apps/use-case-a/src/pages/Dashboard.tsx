@@ -5,6 +5,7 @@ import { ProofPanel } from "../proof/ProofPanel";
 
 export const Dashboard = () => {
   useBreadcrumb("Dashboard");
+  // FR-10: Link + useNavigate to reports/42
   const navigate = useNavigate();
   return (
     <>

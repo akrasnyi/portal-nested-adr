@@ -1,5 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 
+// FR-01: the one QueryClient instance (also exposed as window.__shell.queryClient, FR-12)
 export const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: Number.POSITIVE_INFINITY } } });
 
 // Pre-populated so a remote reading ["tenant"] proves it shares this cache (no fetch happens)

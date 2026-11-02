@@ -1,10 +1,10 @@
 # Portal nested federation spike
 
-Proof for **[ADR-0001: nested Module Federation topology](docs/adr/0001-nested-topology.md)** and **[ADR-0002: sharing types between repos](docs/adr/0002-type-sharing.md)**: shell → App Host → Use case A on Vite 5 + `@module-federation/vite` 1.7.2. The structure mirrors our production portal: layers, `federationShared`, `RemoteBoundary`, runtime remotes from `config.json`, roles → modules, and the URL contract. Auth is stubbed and there is no design system.
+Proof for **[ADR-0001: nested Module Federation topology](docs/adr/0001-nested-topology.md)** and **[ADR-0002: sharing types between repos](docs/adr/0002-type-sharing.md)**: shell → App Host → Use case A on Vite 5 + `@module-federation/vite` 1.7.2. The structure mirrors our production portal: layers, `federationShared`, `RemoteBoundary`, static build-time remotes, roles → modules, and the URL contract. Auth is stubbed and there is no design system.
 
 ```
-apps/shell     host, :5170    routes /app-host/* → App Host (guarded by RequireModule)
-apps/app-host   remote + host, :5174   USE_CASES → catalog, sidebar, routes; registers Use case A at runtime
+apps/shell     host, :5170    routes /app-host/* → static remote App Host (guarded by RequireModule)
+apps/app-host   remote + host, :5174   USE_CASES → catalog, sidebar, routes; static remote Use case A (vite.config.ts)
 apps/use-case-a  remote, :5175  nested routes + ProofPanel (identity checks)
 packages/contract   @portal/contract: auth, RequireModule, RemoteBoundary, breadcrumbs (shared singleton)
 config/federation-shared.ts   singleton + strictVersion; exact library versions, ^range for the contract
@@ -61,7 +61,7 @@ An earlier spike built the same nested topology (shell → dashboard → widget)
 | | webpack variant | This spike (Vite) |
 |---|---|---|
 | Bundler / federation | webpack 5 `ModuleFederationPlugin` | Vite 5 + `@module-federation/vite` 1.7.2 (runtime 0.17.1) |
-| How remotes are declared | Static build-time `remotes` in shell and dashboard; a new widget needs a rebuild | Runtime `registerRemotes`: the shell reads `config.json`, App Host reads its `USE_CASES` list |
+| How remotes are declared | Static build-time `remotes` in shell and dashboard; a new widget needs a rebuild | Static build-time `remotes` too: the shell declares only `appHost`, App Host declares its use cases (a new use case needs an App Host rebuild). `shareStrategy: "loaded-first"` in all apps |
 | Shell-owned state | The shell `exposes` a store **and lists itself in `remotes`**, so its own UI imports `shell/store` through its container | Shared singleton workspace package `@portal/contract`; nobody imports through the shell's container |
 | Why the self-remote was needed | Shell `main.js` and `remoteEntry.js` are two webpack runtimes with two module caches, so a local import creates a second store | Not needed: ES modules are keyed by URL, so local and exposed imports evaluate once (tested) |
 | Leaf knows the root | The widget lists `shell` in its `remotes`; it can't run without the shell's URL | The leaf imports a package; it doesn't know any URL of the shell |
