@@ -5,9 +5,14 @@ import { federationShared } from "../../config/federation-shared";
 
 // Experiment: declare Use case A as a build-time remote instead of registering it at runtime
 const staticRemotes = process.env.APP_HOST_STATIC_REMOTES === "1";
+// Experiment: load Use case A through its mf-manifest.json instead of remoteEntry.js
+const manifest = process.env.APP_HOST_MANIFEST === "1";
 
 export default defineConfig(({ command }) => ({
-  define: { "import.meta.env.VITE_STATIC_REMOTES": JSON.stringify(staticRemotes) },
+  define: {
+    "import.meta.env.VITE_STATIC_REMOTES": JSON.stringify(staticRemotes),
+    "import.meta.env.VITE_MANIFEST": JSON.stringify(manifest),
+  },
   base: command === "build" ? "/V1/mf/app-host/" : "/",
   server: { port: 5174, strictPort: true, origin: "http://localhost:5174", cors: true },
   plugins: [

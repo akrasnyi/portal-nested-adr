@@ -27,6 +27,7 @@ export default defineConfig(({ command }) => ({
       name: "useCaseA",
       filename: "remoteEntry.js",
       exposes: { "./App": "./src/App.tsx" },
+      manifest: true,
       shared,
     }),
   ],

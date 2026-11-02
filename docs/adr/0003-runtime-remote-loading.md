@@ -3,7 +3,7 @@
 - **Status:** Proposed
 - **Date:** 2026-11-02
 - **Related:** [ADR-0001](0001-nested-topology.md), [ADR-0002](0002-type-sharing.md)
-- **Evidence:** [results.md](../results.md), [results-failures.md](../results-failures.md), [results-static-remotes.md](../results-static-remotes.md)
+- **Evidence:** [results.md](../results.md), [results-failures.md](../results-failures.md), [results-static-remotes.md](../results-static-remotes.md), [results-manifest.md](../results-manifest.md)
 
 ## Context
 
@@ -27,7 +27,7 @@ Both pass every acceptance check in dev and build: one React, the shell's QueryC
 
    - `id`: the federation name passed to `registerRemotes`.
    - `moduleId`: the permission key for `RequireModule`.
-   - `entry`: relative to `origin + /V1/` in production (single origin, see the URL contract in ADR-0001), absolute in dev.
+   - `entry`: relative to `origin + /V1/` in production (single origin, see the URL contract in ADR-0001), absolute in dev. It points at `remoteEntry.js`. `mf-manifest.json` also works as the entry on 1.7.2 (see "Manifest as the entry" below), but it is not the default.
 
    **No `exposes` and no `shared` in the descriptor.** Both are fixed when the remote is built; a copy in JSON cannot change them and only drifts. Every remote exposes `./App`, typed as `RemoteApp` in the contract (ADR-0002). A remote that ever needs another module gets one `module` field, not a list. The shared list lives in the build (`config/federation-shared.ts`; across repos, the contract or a shared config package).
 5. **Where the descriptors live:**
@@ -49,6 +49,16 @@ Measured in [results-static-remotes.md](../results-static-remotes.md):
 
 The build-time form has two real advantages: the dependency is visible in the config, and `import()` reads naturally. Neither outweighs the eager fetch and the fact that recovery requires the runtime API anyway.
 
+## Manifest as the entry
+
+Tested with `manifest: true` in Use case A and `APP_HOST_MANIFEST=1` in App Host ([results-manifest.md](../results-manifest.md)):
+
+- **Works on 1.7.2** with the unchanged loader. ProofPanel 7/7 in dev and build, one React provider, 0 console errors. Retry after a blocked remote recovers without a reload (`mf-manifest.json?retry=1`, build).
+- **The manifest lists** `exposes` (`./App` → its JS and CSS files), the 6 shared libraries with versions, and `publicPath`. In dev the file lists are empty.
+- **No speed gain.** The `App` chunk now loads in parallel with `remoteEntry.js`, but the manifest adds a request before `remoteEntry`, and shared chunks still wait for it. On localhost: 13 ms with the manifest vs 11 ms without.
+
+**Decision:** keep `remoteEntry.js` as the entry. Turn the manifest on in a remote only when something needs it: dts-plugin types (ADR-0002) or inspecting what a remote exposes and shares.
+
 ## Consequences
 
 **Positive**
@@ -69,12 +79,13 @@ The build-time form has two real advantages: the dependency is visible in the co
 |---|---|
 | **Build-time `remotes` everywhere** (webpack-style) | Eager entry fetch, no recovery without the runtime fallback, per-remote type declarations, host rebuild for every new remote. See the table above |
 | **Build-time for App Host → use cases, runtime for shell → App Host** | Two mechanisms, two retry paths, and still the eager fetch inside App Host. Tested as the `APP_HOST_STATIC_REMOTES=1` experiment |
-| **`exposes` and `shared` in the descriptor** | Neither can be changed at runtime. A copy in JSON drifts silently. For inspection, a remote can build `mf-manifest.json` (`manifest: true`) instead |
+| **`exposes` and `shared` in the descriptor** | Neither can be changed at runtime. A copy in JSON drifts silently. For inspection, a remote can build `mf-manifest.json` (`manifest: true`, tested) instead |
+| **`mf-manifest.json` as the default entry** | Works, but one more request before `remoteEntry` and no measured gain. See "Manifest as the entry" |
 | **`preloadRemote` for every use case on App Host mount** | Same cost as the eager fetch. Use it only on hover or focus of a use-case link, if the extra hop (ADR-0001) turns out to matter |
 
 ## Not verified
 
 - Decision 5: App Host's descriptor file is a proposal. The spike still uses the `USE_CASES` constant.
 - The shared loader helper of decision 2 (the two copies are tested separately).
-- `manifest: true` and an `mf-manifest.json` entry on plugin 1.7.2.
+- Manifest entry: retry in dev, a `strictVersion` mismatch, and timing on a real network (only localhost, one run).
 - Descriptor validation and the remote-error hook.

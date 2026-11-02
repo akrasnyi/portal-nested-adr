@@ -5,7 +5,9 @@ const useCaseA = {
     path: "use-case-a",
     title: "Use case A",
     subtitle: "Example use case loaded by App Host.",
-    entry: import.meta.env.DEV ? "http://localhost:5175/remoteEntry.js" : "mf/use-case-a/remoteEntry.js",
+    entry: import.meta.env.VITE_MANIFEST
+      ? import.meta.env.DEV ? "http://localhost:5175/mf-manifest.json" : "mf/use-case-a/mf-manifest.json"
+      : import.meta.env.DEV ? "http://localhost:5175/remoteEntry.js" : "mf/use-case-a/remoteEntry.js",
 } as const;
 
 // Experiment only (experiments/separate-repos): a remote built in another repo. Off unless VITE_USE_CASE_B is set at build time

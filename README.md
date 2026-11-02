@@ -126,6 +126,7 @@ An earlier spike built the same nested topology (shell → dashboard → widget)
 | Use case A route `crash` (link on the Use case A dashboard) | Use case A throws during render |
 | `UCA_REACT_REQUIRED=19.1.0` (+ `UCA_STRICT=false`) when building `apps/use-case-a` | Version-mismatch experiment |
 | `APP_HOST_STATIC_REMOTES=1` when building or running `apps/app-host` | Use case A as a build-time `remotes` entry and `import("useCaseA/App")` instead of the runtime API ([results](docs/results-static-remotes.md)) |
+| `APP_HOST_MANIFEST=1` when running or building `apps/app-host` | Use case A loaded through `mf-manifest.json` instead of `remoteEntry.js` (the manifest is always emitted by `apps/use-case-a`) ([results](docs/results-manifest.md)) |
 | `CONTRACT_MODE=local\|self` (+ `SELF_URL`, `BIND`) in `experiments/expose-contract/*` | Exposed-contract comparison |
 | `node experiments/separate-repos/setup.mjs …`, `VITE_USE_CASE_B=1`, `serve.mjs --mount=use-case-b=<dist>` | Separate-repos experiments (see [its README](experiments/separate-repos/README.md)) |
 
