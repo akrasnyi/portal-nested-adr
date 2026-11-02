@@ -1,6 +1,6 @@
 # Portal nested federation spike
 
-Proof for **[ADR-0001: nested Module Federation topology](docs/adr/0001-nested-topology.md)** and **[ADR-0002: sharing types between repos](docs/adr/0002-type-sharing.md)**: shell → App Host → Use case A on Vite 5 + `@module-federation/vite` 1.7.2. The structure mirrors our production portal: layers, `federationShared`, `RemoteBoundary`, runtime remotes from `config.json`, roles → modules, and the URL contract. Auth is stubbed and there is no design system.
+Proof for **[ADR-0001: nested Module Federation topology](docs/adr/0001-nested-topology.md)** , **[ADR-0002: sharing types between repos](docs/adr/0002-type-sharing.md)** and **[ADR-0003: loading remotes through the runtime API](docs/adr/0003-runtime-remote-loading.md)**: shell → App Host → Use case A on Vite 5 + `@module-federation/vite` 1.7.2. The structure mirrors our production portal: layers, `federationShared`, `RemoteBoundary`, runtime remotes from `config.json`, roles → modules, and the URL contract. Auth is stubbed and there is no design system.
 
 ```
 apps/shell     host, :5170    routes /app-host/* → App Host (guarded by RequireModule)
@@ -30,7 +30,7 @@ The nested topology works on Vite 5 + `@module-federation/vite` 1.7.2, in both `
   - each remote needs a hand-written `declare module`;
   - a failed static import never recovers on its own, and needs a runtime `registerRemotes({ force: true })` fallback.
 
-  We keep the runtime API as the default ([results](docs/results-static-remotes.md)).
+  We keep the runtime API as the default ([ADR-0003](docs/adr/0003-runtime-remote-loading.md), [results](docs/results-static-remotes.md)).
 
 Details: [ADR-0001](docs/adr/0001-nested-topology.md#spike-result-works).
 

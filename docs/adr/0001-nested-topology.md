@@ -20,7 +20,7 @@ A webpack spike by a colleague worked but needed the shell to list **itself** in
 - **Outcome:** in both `vite dev` and the production build, Use case A gets the shell's React, QueryClient, router and `AuthContext`. Only one React core file is fetched. A user switch in the shell reaches Use case A. Nested navigation updates the shell's URL and history.
 - **Note on the "fallback" category:** we load remotes through the runtime API **by design**, as the production portal already does, not as a workaround.
   - The classic variant also **works**. App Host declares Use case A as a build-time `remotes` entry (`{ type: "module", name: "useCaseA", entry: "/V1/mf/use-case-a/remoteEntry.js" }`; a root-relative entry is fine on one origin) and imports `import("useCaseA/App")`. All checks pass in dev and build, and the shell still doesn't know Use case A ([results-static-remotes.md](../results-static-remotes.md)).
-  - Its trade-offs are why the runtime API stays the default:
+  - Its trade-offs are why the runtime API stays the default ([ADR-0003](0003-runtime-remote-loading.md)):
     - the entry is fetched eagerly when App Host loads;
     - the URL is baked into App Host's build;
     - each remote needs a hand-written `declare module`;
