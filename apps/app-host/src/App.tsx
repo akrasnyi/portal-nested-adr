@@ -1,10 +1,14 @@
 import { RemoteBoundary, useBreadcrumb } from "@portal/contract";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 
-import { loadUseCase } from "./load-use-case";
+import { loadUseCase, resolveEntry } from "./load-use-case";
 import { USE_CASES } from "./use-cases";
 
 import "./app-host.css";
+
+// Experiment, variant c: start the use-cases.json fetch at module evaluation, so it overlaps with the route chunk
+const useCaseEntries =
+  import.meta.env.VITE_VARIANT === "c" ? fetch(resolveEntry("mf/app-host/use-cases.json")).then((r) => r.json()) : undefined;
 
 const Catalog = () => (
   <section>
@@ -46,7 +50,9 @@ export default function App() {
               element={<RemoteBoundary id={uc.remoteId} load={() =>
                 import.meta.env.VITE_STATIC_REMOTES
                   ? import("./load-static").then((m) => m.loadStatic(uc))
-                  : loadUseCase(uc)
+                  : import.meta.env.VITE_VARIANT === "b" || import.meta.env.VITE_VARIANT === "c"
+                    ? import("./load-use-case-json").then((m) => m.loadUseCaseJson(uc, useCaseEntries))
+                    : loadUseCase(uc)
               } />}
             />
           ))}
