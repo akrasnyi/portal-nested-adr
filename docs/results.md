@@ -69,7 +69,7 @@ Share scope: `__SHARE__` has one map per instance, but all three point at the sa
 - `react-router` added as an explicit dependency (6.30.4) so it can be shared and its version read from root `node_modules`.
 - `erasableSyntaxOnly` from the reference tsconfig dropped: it needs TS >= 5.8 and the pinned TS is 5.5.4.
 - Remotes have a stub `index.html` (Vite build fails with "Could not resolve entry module index.html" without one). Not a standalone mode.
-- No `manifest` (default false in 1.7.2); entries are `remoteEntry.js`, as in the reference.
+- Entries are `remoteEntry.js`, as in the reference.
 - `useBreadcrumb` orders segments by first-render order (render is parent-first, effects child-first), via a module counter in the singleton contract.
 - Verification scripts live outside the repo (`.../scratchpad/adr-verify/verify.mjs`), as requested; not committed.
 

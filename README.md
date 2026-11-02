@@ -2,8 +2,8 @@
 
 Proof for **[ADR-0001: nested Module Federation topology](docs/adr/0001-nested-topology.md)** , **[ADR-0002: sharing types between repos](docs/adr/0002-type-sharing.md)** and **[ADR-0003: loading remotes through the runtime API](docs/adr/0003-runtime-remote-loading.md)**: shell → App Host → Use case A on Vite 5 + `@module-federation/vite` 1.7.2. The structure mirrors our production portal: layers, `federationShared`, `RemoteBoundary`, runtime remotes from `config.json`, roles → modules, and the URL contract. Auth is stubbed and there is no design system.
 
-Requirements of the spike (FR/NFR/AC IDs, with the runtime API as Option A): [docs/requirements.md](docs/requirements.md)
-Status of each requirement against the code, with the `FR-xx` / `NFR-xx` / `Option A:` tags in the source: [docs/progress.md](docs/progress.md)
+Requirements of the spike (FR/NFR/AC IDs, remotes loaded through the runtime API): [docs/requirements.md](docs/requirements.md)
+Status of each requirement against the code, with the `FR-xx` / `NFR-xx` / `Option A:` (runtime API) tags in the source: [docs/progress.md](docs/progress.md)
 
 ```
 apps/shell     host, :5170    routes /app-host/* → App Host (guarded by RequireModule)
@@ -27,13 +27,6 @@ The nested topology works on Vite 5 + `@module-federation/vite` 1.7.2, in both `
   - **Retry after a failed entry needed a fix.** The browser memoises a failed `import()`. The loader now re-registers the remote with a cache-busting URL.
   - **The error boundary got stuck after navigation.** Fixed: it now resets when the location changes.
   - **Cold Vite dev cache, dev only.** The first load is interrupted once by the dependency optimizer's reload.
-- **Build-time `remotes` works too.** App Host can declare Use case A in its federation config and use `import("useCaseA/App")`, still unknown to the shell. All checks pass in dev and build. Trade-offs versus the runtime API:
-  - the entry is fetched **eagerly**, as soon as App Host loads, even on its catalog page;
-  - the entry URL is baked into App Host's build;
-  - each remote needs a hand-written `declare module`;
-  - a failed static import never recovers on its own, and needs a runtime `registerRemotes({ force: true })` fallback.
-
-  We keep the runtime API as the default ([ADR-0003](docs/adr/0003-runtime-remote-loading.md), [results](docs/results-static-remotes.md)).
 
 Details: [ADR-0001](docs/adr/0001-nested-topology.md#spike-result-works).
 
@@ -49,7 +42,7 @@ The brief's criteria, with this repo's names (App Host, Use case A). Checked in 
 | 4 | react-router navigation inside Use case A works and keeps the shell's URL and history intact | PASS | PASS | `navigate("reports/42")` updates the window path, shell header and breadcrumbs; Back and deep-link reload work |
 | 5 | DevTools → Network shows **one** React chunk | PASS | PASS | React core fetched only from the shell; 0 React files from App Host or Use case A; one provider `portal_host` in the share scope |
 | 6 | All of the above in dev and build/preview | PASS | PASS | [results.md](docs/results.md) |
-| 7 | Result recorded as works / fallback (only via `loadRemote`) / blocker, with approach and problems | **works** | | [Verdict](#verdict-works); runtime `loadRemote` is the chosen design, and build-time `remotes` works too ([results](docs/results-static-remotes.md)) |
+| 7 | Result recorded as works / fallback (only via `loadRemote`) / blocker, with approach and problems | **works** | | [Verdict](#verdict-works); runtime `loadRemote` is the design ([ADR-0003](docs/adr/0003-runtime-remote-loading.md)) |
 
 The brief names the global `window.__shellReact`. This repo exposes it as `window.__shell.React`, next to the shell's `queryClient`, `AuthContext` and contract module.
 
@@ -99,7 +92,6 @@ An earlier spike built the same nested topology (shell → dashboard → widget)
 | | webpack variant | This spike (Vite) |
 |---|---|---|
 | Bundler / federation | webpack 5 `ModuleFederationPlugin` | Vite 5 + `@module-federation/vite` 1.7.2 (runtime 0.17.1) |
-| How remotes are declared | Static build-time `remotes` in shell and dashboard; a new widget needs a rebuild | Runtime `registerRemotes`: the shell reads `config.json`, App Host reads its `USE_CASES` list |
 | Shell-owned state | The shell `exposes` a store **and lists itself in `remotes`**, so its own UI imports `shell/store` through its container | Shared singleton workspace package `@portal/contract`; nobody imports through the shell's container |
 | Why the self-remote was needed | Shell `main.js` and `remoteEntry.js` are two webpack runtimes with two module caches, so a local import creates a second store | Not needed: ES modules are keyed by URL, so local and exposed imports evaluate once (tested) |
 | Leaf knows the root | The widget lists `shell` in its `remotes`; it can't run without the shell's URL | The leaf imports a package; it doesn't know any URL of the shell |
@@ -130,7 +122,5 @@ An earlier spike built the same nested topology (shell → dashboard → widget)
 | `UCA_REACT_REQUIRED=19.1.0` (+ `UCA_STRICT=false`) when building `apps/use-case-a` | Version-mismatch experiment |
 | `CONTRACT_MODE=local\|self` (+ `SELF_URL`, `BIND`) in `experiments/expose-contract/*` | Exposed-contract comparison |
 | `node experiments/separate-repos/setup.mjs …`, `VITE_USE_CASE_B=1`, `serve.mjs --mount=use-case-b=<dist>` | Separate-repos experiments (see [its README](experiments/separate-repos/README.md)) |
-
-The build-time `remotes` and manifest switches were removed from this branch; their evidence stays in docs/results-static-remotes.md and docs/results-manifest.md.
 
 Rebuild Use case A normally after the version experiment: `cd apps/use-case-a && ../../node_modules/.bin/vite build`.

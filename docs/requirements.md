@@ -1,18 +1,14 @@
 # Spike: Nested Module Federation (shell → App Host → Use case A)
 
-## Loading options
+## Loading remotes
 
-The requirements below were written for build-time remotes. This repo keeps the runtime API as the default and
-checks each requirement against it. The "Option A" notes say how a requirement reads for the runtime API.
+Remotes load through the runtime API. Every host registers its remotes with `registerRemotes` and loads them with
+`loadRemote("<name>/App")` from `@module-federation/runtime`. The shell gets the App Host URL from `public/config.json`
+(`config.dev.json` in dev). App Host gets the Use case A URL from `USE_CASES` in code (`apps/app-host/src/use-cases.ts`).
+No `remotes` in any build config. See [ADR-0003](adr/0003-runtime-remote-loading.md).
 
-- **Option A (this repo's default): runtime API.** Every host registers its remotes with `registerRemotes` and loads
-  them with `loadRemote("<name>/App")` from `@module-federation/runtime`. The shell gets the App Host URL from
-  `public/config.json` (`config.dev.json` in dev). App Host gets the Use case A URL from `USE_CASES` in code
-  (`apps/app-host/src/use-cases.ts`). No `remotes` in any build config. See [ADR-0003](adr/0003-runtime-remote-loading.md).
-- **Option B: build-time `remotes`.** Not implemented in this branch. It is evaluated only in
-  [results-static-remotes.md](results-static-remotes.md) and [ADR-0003](adr/0003-runtime-remote-loading.md).
-
-An alternative PR uses the same requirement IDs with build-time remotes as the default (Option B). Status of each requirement against the code: [progress.md](progress.md).
+The requirement texts were written for build-time remotes. The "Runtime API" notes say how each one reads here.
+Status of each requirement against the code: [progress.md](progress.md).
 
 ## Goal
 
@@ -33,15 +29,15 @@ The spike result must be recorded as one of: **works** / **fallback** / **blocke
 
 ## Topology
 
-| App | Role | Port | Exposes | Remotes | Remotes (Option A) | Owns providers |
+| App | Role | Port | Exposes | Remotes (runtime API) | Owns providers |
 |---|---|---|---|---|---|---|
-| shell | host | 5170 | — | `appHost` only | `appHost` from `config.json` | Router, QueryClientProvider, AuthProvider, LayoutProvider |
-| app-host | remote for shell + host for Use case A | 5174 | `./App` | `useCaseA` | `useCaseA` from `USE_CASES` in code | none (consumes shell's) |
-| use-case-a | leaf remote | 5175 | `./App` | — | — | none (consumes shell's) |
+| shell | host | 5170 | — | `appHost` from `config.json` | Router, QueryClientProvider, AuthProvider, LayoutProvider |
+| app-host | remote for shell + host for Use case A | 5174 | `./App` | `useCaseA` from `USE_CASES` in code | none (consumes shell's) |
+| use-case-a | leaf remote | 5175 | `./App` | — | none (consumes shell's) |
 
 ## Functional Requirements
 
-| ID | Area | Requirement | Acceptance / Verification | Option A |
+| ID | Area | Requirement | Acceptance / Verification | Runtime API |
 |---|---|---|---|---|
 | FR-01 | shell | Shell renders `BrowserRouter`, a single `QueryClientProvider` (one `QueryClient` instance), `AuthProvider` with a fake user, and `LayoutProvider` at the root. | Providers are mounted once at the app root. | — |
 | FR-02 | shell | Shell defines route `/app-host/*` that renders `React.lazy(() => import("appHost/App"))`. | Navigating to `/app-host` renders App Host. | Route `/app-host/*` in the shell router renders `RemoteBoundary` with `loadRemoteApp("appHost")`, which calls `loadRemote("appHost/App")`. No `import("appHost/App")` in the shell. |
@@ -49,7 +45,7 @@ The spike result must be recorded as one of: **works** / **fallback** / **blocke
 | FR-04 | shell | Shell provides a UI control to switch the fake user (e.g. "Alice" / "Bob"). | Switching the user re-renders shell header with the new name. | — |
 | FR-05 | shell | Shell exposes layout extension points: a context API (e.g. `useLayout().setBreadcrumbs()`) and a DOM mount node (e.g. `#shell-breadcrumbs`) for portals. | Both are available to any descendant component. | — |
 | FR-06 | app-host | App Host exposes `./App`. | Shell loads it via `appHost/App`. | — |
-| FR-07 | app-host | App Host declares remote `useCaseA` → `${VITE_USE_CASE_A_URL}/mf-manifest.json`. | Manifest request goes to port 5175. | No build-time remote. The entry is the URL in `USE_CASES` (`use-cases.ts`): `http://localhost:5175/remoteEntry.js` in dev, `mf/use-case-a/remoteEntry.js` in build. The URL is the code, not a `VITE_*` variable. |
+| FR-07 | app-host | App Host declares remote `useCaseA` → `${VITE_USE_CASE_A_URL}/mf-manifest.json`. | Manifest request goes to port 5175. | Registered at runtime. The entry is the URL in `USE_CASES` (`use-cases.ts`): `http://localhost:5175/remoteEntry.js` in dev, `mf/use-case-a/remoteEntry.js` in build. The URL is the code, not a `VITE_*` variable. |
 | FR-08 | app-host | App Host defines relative route `use-case-a/*` that renders `React.lazy(() => import("useCaseA/App"))`. App Host must not create its own Router. | `/app-host/use-case-a` renders Use case A inside App Host inside shell. | Relative route `use-case-a/*` is built from `USE_CASES` and renders `RemoteBoundary` with `loadUseCase`, which calls `loadRemote("useCaseA/App")`. No own Router. |
 | FR-09 | use-case-a | Use case A exposes `./App` and renders the text "Use case A" plus `useAuth().user.name` from the shell's auth context. | Shell user name is visible in Use case A. | — |
 | FR-10 | use-case-a | Use case A has at least two internal routes (e.g. `/app-host/use-case-a` and `/app-host/use-case-a/reports/:reportId`) using `Link` / `useNavigate`. Use case A must not create its own Router. | Navigation updates the URL; Back/Forward work across shell, App Host and Use case A. | — |
@@ -57,7 +53,7 @@ The spike result must be recorded as one of: **works** / **fallback** / **blocke
 | FR-12 | diagnostics | Shell sets `window.__shellReact = React` and `window.__shellQueryClient = queryClient` when diagnostics are enabled (dev, or build with `VITE_MF_DEBUG=true`). | Globals exist in both modes when the flag is on. | — |
 | FR-13 | diagnostics | Use case A logs `[mf-check]` results: `window.__shellReact === React`, `useQueryClient() === window.__shellQueryClient`, `useInRouterContext()`, current `useAuth().user`. | All checks log `true` / expected user. | — |
 | FR-14 | contexts | Shared contexts (Auth, Layout) are created through a global registry: `globalThis[Symbol.for("shell.<name>.context")] ??= createContext(...)`, so duplicate module copies resolve to the same context object. | Use case A reads the shell context even if the contracts module is bundled more than once. | — |
-| FR-15 | fallback | App Host supports an alternative Use case A loader via runtime API (`registerRemotes` + `loadRemote("useCaseA/App")` from `@module-federation/enhanced/runtime`), switchable via `VITE_USE_CASE_A_LOADER=static\|runtime`. | Both loaders render Use case A; diagnostics are compared between them. | Roles are reversed. The runtime loader is the default. The static loader (Option B) is not implemented in this branch; its checks are in results-static-remotes.md. |
+| FR-15 | fallback | App Host supports an alternative Use case A loader via runtime API (`registerRemotes` + `loadRemote("useCaseA/App")` from `@module-federation/enhanced/runtime`), switchable via `VITE_USE_CASE_A_LOADER=static\|runtime`. | Both loaders render Use case A; diagnostics are compared between them. | The runtime loader is the only loader in this branch. The `VITE_USE_CASE_A_LOADER` switch is not implemented. |
 
 ## Non-Functional Requirements
 
@@ -87,15 +83,15 @@ The spike result must be recorded as one of: **works** / **fallback** / **blocke
 | AC-5 | react-router navigation inside Use case A works and does not break shell URL/history | Navigate in Use case A, use Back/Forward | ⬜ | ⬜ |
 | AC-6 | Use case A contributes to shell layout (breadcrumbs via context, portal into shell DOM) | Visual check + unmount check | ⬜ | ⬜ |
 | AC-7 | Only one react chunk in DevTools → Network | Network tab | ⬜ | ⬜ |
-| AC-8 | Fallback loader (`loadRemote`) tested if AC-2…AC-7 fail with static remotes | Switch the loader (Option A: static remotes are the fallback, see FR-15) | ⬜ | ⬜ |
+| AC-8 | Fallback loader (`loadRemote`) tested if AC-2…AC-7 fail with static remotes | Switch the loader (not in this branch, see FR-15) | ⬜ | ⬜ |
 
 ## Outcome Definitions
 
-| Outcome | Meaning | Option A |
+| Outcome | Meaning | Runtime API |
 |---|---|---|
-| **works** | AC-1…AC-7 pass in both modes using static `remotes` in App Host. | AC-1…AC-7 pass in both modes with the runtime loader (`registerRemotes` + `loadRemote`, the default). Static `remotes` (Option B) reached the same verdict, [results-static-remotes.md](results-static-remotes.md). |
-| **fallback** | AC-1…AC-7 pass in both modes only when App Host loads Use case A via `loadRemote`. | AC-1…AC-7 pass in both modes only with the static `remotes` (Option B, not implemented in this branch). |
-| **blocker** | At least one AC fails in at least one mode with both loaders. Document the failing AC, mode and root cause. | Same, for the runtime loader and the static experiment. |
+| **works** | AC-1…AC-7 pass in both modes using static `remotes` in App Host. | AC-1…AC-7 pass in both modes with the runtime loader (`registerRemotes` + `loadRemote`). |
+| **fallback** | AC-1…AC-7 pass in both modes only when App Host loads Use case A via `loadRemote`. | Not reached in this branch: AC-1…AC-7 pass with the runtime loader. |
+| **blocker** | At least one AC fails in at least one mode with both loaders. Document the failing AC, mode and root cause. | Applies to the runtime loader. |
 
 ## Risks & Pitfalls
 
@@ -108,13 +104,13 @@ The spike result must be recorded as one of: **works** / **fallback** / **blocke
 | Relative `base` in remote builds | Remote chunks requested from host origin (404) | NFR-06 |
 | Unshared subpaths (`react/jsx-runtime`, `react-dom/client`) | Second React-related chunk, AC-7 fails | NFR-02 |
 | Nested `BrowserRouter` in App Host or Use case A | Broken history, duplicate router context | FR-08, FR-10 |
-| Failed remote entry memoised by the browser (Option A) | Retry shows the same error until reload | Re-register the remote with `?retry=n` (`loadRemoteApp`, `loadUseCase`) |
+| Failed remote entry memoised by the browser | Retry shows the same error until reload | Re-register the remote with `?retry=n` (`loadRemoteApp`, `loadUseCase`) |
 
 ## Result
 
 | Field | Value |
 |---|---|
 | Outcome | works / fallback / blocker |
-| Approach | _runtime `registerRemotes` + `loadRemote` (Option A) or static `remotes` (Option B), context registry used: yes/no_ |
+| Approach | _runtime `registerRemotes` + `loadRemote`, context registry used: yes/no_ |
 | Problems found | _…_ |
 | Date / versions tested | _…_ |

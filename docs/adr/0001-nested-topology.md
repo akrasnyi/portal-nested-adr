@@ -19,17 +19,11 @@ A webpack spike by a colleague worked but needed the shell to list **itself** in
 - **Approach:** App Host is a remote of the shell and a host of Use case A. It registers Use case A at runtime (`registerRemotes` + `loadRemote` from `@module-federation/runtime`); the shell never declares it. React, react-dom, react-router(-dom), react-query and `@portal/contract` are shared singletons with `strictVersion`.
 - **Outcome:** in both `vite dev` and the production build, Use case A gets the shell's React, QueryClient, router and `AuthContext`. Only one React core file is fetched. A user switch in the shell reaches Use case A. Nested navigation updates the shell's URL and history.
 - **Note on the "fallback" category:** we load remotes through the runtime API **by design**, as the production portal already does, not as a workaround.
-  - The classic variant also **works**. App Host declares Use case A as a build-time `remotes` entry (`{ type: "module", name: "useCaseA", entry: "/V1/mf/use-case-a/remoteEntry.js" }`; a root-relative entry is fine on one origin) and imports `import("useCaseA/App")`. All checks pass in dev and build, and the shell still doesn't know Use case A ([results-static-remotes.md](../results-static-remotes.md)).
-  - Its trade-offs are why the runtime API stays the default ([ADR-0003](0003-runtime-remote-loading.md)):
-    - the entry is fetched eagerly when App Host loads;
-    - the URL is baked into App Host's build;
-    - each remote needs a hand-written `declare module`;
-    - a failed static import is memoised by the browser and never recovers without a runtime `registerRemotes({ force: true })` fallback.
 - **Problems found:** (1) after a failed entry load the browser memoises the failed `import()`, so Retry needed a cache-busting re-registration (fixed); (2) the boundary stayed in its error state after navigation (fixed); (3) on a cold Vite dev cache, the first page load is interrupted once by the dependency optimizer's reload ("optimized dependencies changed. reloading"). Dev-only; the next load works.
 
 ## Decision
 
-1. **Nested topology is supported.** App Host registers its use cases at runtime (`registerRemotes` + `loadRemote`) from a typed `USE_CASES` list. The shell registers only App Host. No build-time `remotes` anywhere.
+1. **Nested topology is supported.** App Host registers its use cases at runtime (`registerRemotes` + `loadRemote`) from a typed `USE_CASES` list. The shell registers only App Host. No `remotes` in any build config.
 2. **The shell's contract is a shared singleton workspace package**, `@portal/contract`. It holds `AuthContext`, `useAuth`, `RequireModule`, `RemoteBoundary`, breadcrumbs and `ModuleId`. It is not exposed as `shell/contract`, and **no self-remote** is used.
 3. **`RemoteBoundary` lives in the contract** and is used at both levels. It resets after a failure when the location changes. After a failed entry load, the loader re-registers that remote with a cache-busting entry, so Retry works without a page reload.
 4. **`strictVersion: true` stays on** for every shared library. Libraries use exact versions. The contract uses a semver range; see [ADR-0002](0002-type-sharing.md).

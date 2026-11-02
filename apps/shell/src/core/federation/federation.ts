@@ -14,7 +14,7 @@ export const initFederation = () => {
 
 const failures = new Map<string, number>();
 
-// Option A: loadRemote("<id>/App") at runtime, not import("<id>/App") (FR-02)
+// Option A: loadRemote("<id>/App") at runtime (FR-02)
 export const loadRemoteApp = async (id: string): Promise<RemoteModule> => {
   let mod: RemoteModule | null;
   try {

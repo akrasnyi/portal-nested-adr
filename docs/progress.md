@@ -1,14 +1,13 @@
-# Requirements progress (Option A: runtime API)
+# Requirements progress (runtime API)
 
-Tracks [requirements.md](requirements.md) against the code in this repo. Every requirement is tagged in the code with a comment
-(`// FR-01: ...`, `{/* FR-04: ... */}`), so `grep -rn "FR-05" apps packages config scripts` jumps to it. `TODO` in a tag marks a gap.
-Option A places are tagged `// Option A: ...` (the runtime API and the URL source). JSON files cannot hold comments, so
+Tracks [requirements.md](requirements.md) against the code in this repo. Code places specific to the runtime API are tagged
+`// Option A: ...` in the source (the runtime API and the URL source). JSON files cannot hold comments, so
 [public/config.json](../apps/shell/public/config.json) and [config.dev.json](../apps/shell/public/config.dev.json) are described here only.
 
 Name mapping: App Host = `apps/app-host` (`appHost`, route `/app-host`), Use case A = `apps/use-case-a` (`useCaseA`, route `use-case-a`),
 LayoutProvider = `BreadcrumbsProvider`, diagnostics = Use case A ProofPanel.
 
-## How the loading works here (Option A)
+## How the loading works here
 
 - **Shell → App Host:** [federation.ts](../apps/shell/src/core/federation/federation.ts) `initFederation` registers the remotes from
   `config.json` (fetched before render in [bootstrap.tsx](../apps/shell/src/bootstrap.tsx)); the route loads them with `loadRemote`.
@@ -19,14 +18,10 @@ LayoutProvider = `BreadcrumbsProvider`, diagnostics = Use case A ProofPanel.
 - **Retry:** both loaders catch a failed `loadRemote`, re-register the same name with `?retry=n` and `{ force: true }`, then rethrow.
   The boundary ([remote-boundary.tsx](../packages/contract/src/remote-boundary.tsx)) shows "currently unavailable" and Retry. Verified in the build
   (results-failures.md, 2b); not in dev.
-- **shareStrategy:** the default `version-first` in every app (not set in any `vite.config.ts`). The runtime path has no static remote, so
-  Use case A's entry is requested only when its route opens. With the static remote, the entry is fetched when App Host loads
-  (results-static-remotes.md, "When is the entry fetched").
-- **Build-time remotes (Option B):** not implemented in this branch. It is evaluated only in [results-static-remotes.md](results-static-remotes.md)
-  and [ADR-0003](adr/0003-runtime-remote-loading.md). The mf-manifest.json entry is evidence only in [results-manifest.md](results-manifest.md).
+- **Entry timing:** Use case A's `remoteEntry.js` is requested only when its route opens.
 
-Status: ✅ Passed · 🟡 In progress / gap. Statuses come from the code and the evidence in [results.md](results.md),
-[results-failures.md](results-failures.md), [results-static-remotes.md](results-static-remotes.md) and [results-manifest.md](results-manifest.md).
+Status: ✅ Passed · 🟡 In progress / gap. Statuses come from the code and the evidence in [results.md](results.md) and
+[results-failures.md](results-failures.md).
 Nothing was re-run for this document.
 
 ## Functional requirements
@@ -39,7 +34,7 @@ Nothing was re-run for this document.
 | FR-04 | ✅ | [PortalLayout.tsx](../apps/shell/src/widgets/portal-layout/PortalLayout.tsx), [StubAuthProvider.tsx](../apps/shell/src/features/auth/StubAuthProvider.tsx) | `<select>` with 4 fake users (also `?user=`); header name re-renders. "user switch" PASS in dev and build (results.md) |
 | FR-05 | 🟡 | [breadcrumbs.tsx](../packages/contract/src/breadcrumbs.tsx), [PortalLayout.tsx](../apps/shell/src/widgets/portal-layout/PortalLayout.tsx) | Context API exists (`useBreadcrumb`, `useBreadcrumbs`). Gap: no DOM mount node (`#shell-breadcrumbs`) for portals; breadcrumbs render in the shell `<nav>` |
 | FR-06 | ✅ | [app-host/vite.config.ts](../apps/app-host/vite.config.ts) | Exposes `./App` |
-| FR-07 | 🟡 | [use-cases.ts](../apps/app-host/src/use-cases.ts), [app-host/vite.config.ts](../apps/app-host/vite.config.ts) | Option A: no build-time remote. URL in `USE_CASES`: `http://localhost:5175/remoteEntry.js` (dev), `mf/use-case-a/remoteEntry.js` (build). Gaps: not a `VITE_*` env variable; `remoteEntry.js` instead of `mf-manifest.json` (the manifest entry is evaluated only in results-manifest.md) |
+| FR-07 | 🟡 | [use-cases.ts](../apps/app-host/src/use-cases.ts), [app-host/vite.config.ts](../apps/app-host/vite.config.ts) | Runtime registration, no remote in any build config. URL in `USE_CASES`: `http://localhost:5175/remoteEntry.js` (dev), `mf/use-case-a/remoteEntry.js` (build). Gaps: not a `VITE_*` env variable; `remoteEntry.js` instead of `mf-manifest.json` |
 | FR-08 | ✅ | [app-host/App.tsx](../apps/app-host/src/App.tsx), [use-cases.ts](../apps/app-host/src/use-cases.ts) | Relative `use-case-a/*` route built from `USE_CASES`; `RemoteBoundary` → `loadUseCase` → `loadRemote("useCaseA/App")`. No own Router in App Host |
 | FR-09 | ✅ | [use-case-a/App.tsx](../apps/use-case-a/src/App.tsx), [ProofPanel.tsx](../apps/use-case-a/src/proof/ProofPanel.tsx), [vite.config.ts](../apps/use-case-a/vite.config.ts) | Exposes `./App`. Breadcrumb "Use case A" and the ProofPanel `auth-user` row show `useAuth().user.name` (results.md) |
 | FR-10 | 🟡 | [use-case-a/App.tsx](../apps/use-case-a/src/App.tsx), [Dashboard.tsx](../apps/use-case-a/src/pages/Dashboard.tsx), [ReportDetails.tsx](../apps/use-case-a/src/pages/ReportDetails.tsx) | Index + `reports/:reportId`, `Link` + `useNavigate`, no own Router. Back checked in dev and build (results.md). Gap: Forward not recorded |
@@ -47,7 +42,7 @@ Nothing was re-run for this document.
 | FR-12 | 🟡 | [bootstrap.tsx](../apps/shell/src/bootstrap.tsx) | Globals exist as `window.__shell.{React, ReactDOM, ReactRouter, queryClient, AuthContext, contractModule}`, always set. Gaps: names differ from `__shellReact` / `__shellQueryClient`; not behind dev or `VITE_MF_DEBUG` |
 | FR-13 | 🟡 | [ProofPanel.tsx](../apps/use-case-a/src/proof/ProofPanel.tsx) | All checks exist (react, query-client, auth-context, contract-module, auth-user, router, share-scope). Gap: they go to a UI table, not `[mf-check]` console logs |
 | FR-14 | 🟡 | [auth.tsx](../packages/contract/src/auth.tsx), [breadcrumbs.tsx](../packages/contract/src/breadcrumbs.tsx) | Plain `createContext`; identity relies on `@portal/contract` being a shared singleton (checked by `auth-context` / `contract-module`). Gap: no `Symbol.for` registry |
-| FR-15 | 🟡 | [app-host/vite.config.ts](../apps/app-host/vite.config.ts), [App.tsx](../apps/app-host/src/App.tsx) | Option A: runtime loader is the only loader in this branch. Static loader (Option B) is evaluated only in results-static-remotes.md. Gaps: no `VITE_USE_CASE_A_LOADER=static\|runtime` switch; the static loader is not in this branch |
+| FR-15 | 🟡 | [app-host/vite.config.ts](../apps/app-host/vite.config.ts), [App.tsx](../apps/app-host/src/App.tsx) | The runtime loader is the only loader in this branch. Gap: no `VITE_USE_CASE_A_LOADER=static\|runtime` switch |
 
 ## Non-functional requirements
 
@@ -60,7 +55,7 @@ Nothing was re-run for this document.
 | NFR-05 | 🟡 | [federation.ts](../apps/shell/src/core/federation/federation.ts), [runtime-config.ts](../apps/shell/src/shared/config/runtime-config.ts), [use-cases.ts](../apps/app-host/src/use-cases.ts) | Option A: URLs come from `config.json` (shell) and `USE_CASES` (App Host), not from `VITE_APP_HOST_URL` / `VITE_USE_CASE_A_URL`. Changing a remote origin is a config or code change |
 | NFR-06 | 🟡 | [apps/*/vite.config.ts](../apps/shell/vite.config.ts), [serve.mjs](../scripts/serve.mjs) | `target: esnext` ✅ in all apps. `base` is an absolute path on one origin (`/V1/mf/<app>/`), not an absolute URL. No 404s in the build for the healthy chain (results.md) |
 | NFR-07 | 🟡 | [app-host/vite.config.ts](../apps/app-host/vite.config.ts), [use-case-a/vite.config.ts](../apps/use-case-a/vite.config.ts) | Ports 5170 / 5174 / 5175 with `strictPort` ✅. CORS on the App Host and Use case A dev servers ✅. Gap: no `vite preview` servers; the build runs on single-origin `:4174` (`scripts/serve.mjs`), so preview CORS does not apply |
-| NFR-08 | ✅ | [ProofPanel.tsx](../apps/use-case-a/src/proof/ProofPanel.tsx) (`share-scope`), [app-host/vite.config.ts](../apps/app-host/vite.config.ts) | One React provider (`portal_host@19.0.0`) and one React core file fetched, in dev and build (results.md). `shareStrategy` is the default `version-first` here (not set in any app) |
+| NFR-08 | ✅ | [ProofPanel.tsx](../apps/use-case-a/src/proof/ProofPanel.tsx) (`share-scope`), [app-host/vite.config.ts](../apps/app-host/vite.config.ts) | One React provider (`portal_host@19.0.0`) and one React core file fetched, in dev and build (results.md). `shareStrategy` is the plugin default `version-first` (not set in any app) |
 | NFR-09 | ✅ | [use-case-a/vite.config.ts](../apps/use-case-a/vite.config.ts) | `UCA_REACT_REQUIRED=19.1.0` makes the strictVersion error fire and the boundary contains it (results-failures.md, section 4). Checked in the build only; dev not repeated; only react tested |
 | NFR-10 | 🟡 | [ProofPanel.tsx](../apps/use-case-a/src/proof/ProofPanel.tsx) | Gap: no `[mf-check]` prefix, no `VITE_MF_DEBUG` flag |
 | NFR-11 | 🟡 | [dev.mjs](../scripts/dev.mjs), [package.json](../package.json) | `npm run dev` starts all three apps (one command). Production is two (`npm run build && npm run serve`); names differ from `dev:all` / `preview:all` |
@@ -79,13 +74,13 @@ Dev and build columns are taken from [results.md](results.md) (the "Results" tab
 | AC-5 | Router navigation + Back/Forward | 🟡 | 🟡 | navigate ✅ and browser Back ✅ (dev and build). Forward not recorded |
 | AC-6 | Breadcrumbs + portal into shell DOM | 🟡 | 🟡 | Breadcrumbs ✅. Portal not implemented (FR-11b) |
 | AC-7 | One React chunk | ✅ | ✅ | results.md "one React copy loaded": 0 React-core files from App Host or Use case A |
-| AC-8 | Fallback loader | — | — | Not applicable as written: Option A's runtime loader is the primary path. The static remotes were checked as the alternative (results-static-remotes.md, checks 1–9, incl. 7c retry) |
+| AC-8 | Fallback loader | — | — | Not applicable: the runtime loader is the only loader in this branch (see FR-15) |
 
 ## Result
 
 | Field | Value |
 |---|---|
 | Outcome | _pending_ |
-| Approach | _runtime `registerRemotes` + `loadRemote` (Option A, default); static `remotes` (Option B) is not implemented in this branch; context registry: no (singleton contract)_ |
+| Approach | _runtime `registerRemotes` + `loadRemote`; context registry: no (singleton contract)_ |
 | Problems found | _pending_ |
 | Date / versions tested | _pending_ |

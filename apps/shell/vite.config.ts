@@ -10,7 +10,7 @@ export default defineConfig(({ command }) => ({
   resolve: { alias: { "@": path.resolve(__dirname, "src") } },
   plugins: [
     react({ babel: { plugins: [["babel-plugin-react-compiler", {}]] } }),
-    // Option A: no build-time remotes (FR-03, NFR-03): the shell knows only appHost, from config.json
+    // Option A: the shell knows only appHost, from config.json, not from this config (FR-03, NFR-03)
     // Host only: remotes are registered at runtime from config.json (src/core/federation)
     federation({ name: "portal_host", shared: federationShared }),
   ],
