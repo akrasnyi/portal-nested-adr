@@ -1,7 +1,7 @@
 import { Component, type ComponentType, lazy, Suspense } from "react";
 import { useLocation } from "react-router-dom";
 
-// What every remote's "./App" exposes: loaders type loadRemote<RemoteModule>(...), remotes type their default export as RemoteApp
+// What every remote's "./App" exposes: loaders return Promise<RemoteModule> (static import("<remote>/App")), remotes type their default export as RemoteApp
 export type RemoteApp = ComponentType;
 export type RemoteModule = { default: RemoteApp };
 
@@ -61,4 +61,5 @@ class Boundary extends Component<{ id: string; load: Load; at: string }, { faile
   }
 }
 
+// FR-02 / FR-08: React.lazy + Suspense wrapper used by the shell and by App Host
 export const RemoteBoundary = (props: { id: string; load: Load }) => <Boundary {...props} at={useLocation().key} />;

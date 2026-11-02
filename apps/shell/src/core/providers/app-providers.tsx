@@ -6,6 +6,7 @@ import { StubAuthProvider } from "@/features/auth";
 
 import { queryClient } from "./query-client";
 
+// FR-01: single QueryClientProvider, AuthProvider with fake user (StubAuthProvider), BreadcrumbsProvider in place of LayoutProvider
 export const AppProviders = ({ children }: { children: ReactNode }) => (
   <QueryClientProvider client={queryClient}>
     <StubAuthProvider>

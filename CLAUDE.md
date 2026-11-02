@@ -14,8 +14,8 @@ node scripts/pack-contract.mjs    # build @portal/contract to dist + .d.ts, npm 
 On a cold Vite cache, the first dev page load is interrupted once by the dependency optimizer. Warm up before measuring.
 
 ## Layout
-- `apps/shell`: host only. Remotes come from `public/config(.dev).json` at runtime (`src/core/federation`). Layers: `app > core > pages > widgets > features > shared`; never import upward.
-- `apps/app-host`: remote of the shell and host of the use cases. `src/use-cases.ts` (`USE_CASES`) drives the catalog, sidebar and routes. `src/load-use-case.ts` registers use cases lazily.
+- `apps/shell`: host only. Its one remote, `appHost`, is a build-time `remotes` entry in `vite.config.ts` (types in `src/remotes.d.ts`). Layers: `app > core > pages > widgets > features > shared`; never import upward.
+- `apps/app-host`: remote of the shell and host of the use cases. `src/use-cases.ts` (`USE_CASES`) drives the catalog, sidebar and routes; each use case's `load` is `import("<remote>/App")`, and the remotes are declared in `vite.config.ts`.
 - `apps/use-case-a`: leaf remote, with nested relative routes and the ProofPanel (identity checks).
 - `packages/contract`: `@portal/contract`, the shared singleton. It holds auth, `RequireModule`, `RemoteBoundary`, breadcrumbs, `RemoteModule`/`RemoteApp`.
 - `config/federation-shared.ts`: one shared list for every app.
@@ -23,7 +23,8 @@ On a cold Vite cache, the first dev page load is interrupted once by the depende
 
 ## Federation rules (proven; don't break them silently)
 - The shared list is identical in all apps. Libraries use `singleton` + `strictVersion` + **exact** versions. `@portal/contract` uses `^<installed>` (semver, starts at 1.0.0). See ADR-0002.
-- The shell never declares use cases. Remotes are registered with `registerRemotes` + `loadRemote`, with no build-time `remotes` by default. The build-time variant exists only behind `APP_HOST_STATIC_REMOTES=1` (see `docs/results-static-remotes.md`).
+- The shell never declares use cases. Remotes are build-time `remotes` (`{ type: "module", name, entry }`, root-relative `/V1/mf/<app>/remoteEntry.js` in the build) imported as `import("<remote>/App")`; no app calls `registerRemotes` / `loadRemote` itself. The runtime-API variant is described in ADR-0003 and `docs/results*.md`.
+- `shareStrategy: "loaded-first"` in every app. With the default `version-first`, every declared entry in the chain is fetched at startup and a remote, not the shell, can become the React provider. A failed entry does not recover without a page reload.
 - `main.tsx` only does `import("./bootstrap")` (the async boundary).
 - Routes inside remotes are relative. The shell mounts `/app-host/*`, and App Host mounts `<path>/*`.
 - Guards (`RequireModule`) run before `RemoteBoundary`, so a forbidden remote is never requested.

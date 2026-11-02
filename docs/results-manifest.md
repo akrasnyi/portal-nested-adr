@@ -4,6 +4,8 @@ Question: does `manifest: true` work on `@module-federation/vite` 1.7.2, and can
 
 **Verdict: works** in both modes, with the runtime API and no change to the loader. The switch is OFF by default and OFF behaves as before. The manifest does **not** remove the entry waterfall; it moves the Use case A App chunk into parallel with `remoteEntry.js` and adds a manifest request in front of it.
 
+> **Later change (2026-11-02):** the runtime loader is gone. `APP_HOST_MANIFEST=1` now switches App Host's build-time `useCaseA` entry to `mf-manifest.json` in `apps/app-host/vite.config.ts`. The results below were recorded with the runtime loader.
+
 ## Plugin behaviour (1.7.2, `lib/index.esm.js`)
 
 - `manifest: true` makes the plugin emit `mf-manifest.json` at the root of the build output (`mfManifestName`). An object form `{ filePath, fileName }` is also accepted.

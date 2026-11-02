@@ -4,6 +4,8 @@ Question: the runtime variant (`registerRemotes` + `loadRemote`) is the default.
 
 **Verdict: works.** Everything passes in `vite dev` and in the production build on `@module-federation/vite` 1.7.2. Two differences from the runtime variant: Use case A's `remoteEntry.js` is fetched **eagerly** when App Host loads (not on the route), and **retry after a failed entry does not work out of the box** (a 12-line runtime fallback fixes it, see below).
 
+> **Later change (2026-11-02):** build-time `remotes` are now the default at both levels, the `APP_HOST_STATIC_REMOTES` switch and `load-static.ts` are gone, and all apps set `shareStrategy: "loaded-first"`, which makes the entry fetch lazy again. The results below were recorded before that, with the default `version-first`.
+
 ## Setup
 
 Switch: `APP_HOST_STATIC_REMOTES=1`, read by `apps/app-host/vite.config.ts` and exposed to App Host code as `import.meta.env.VITE_STATIC_REMOTES` through Vite `define`. OFF is the default.

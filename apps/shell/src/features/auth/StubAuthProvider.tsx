@@ -3,6 +3,7 @@ import { createContext, type ReactNode, useContext, useState } from "react";
 
 import { resolveModules } from "./permissions";
 
+// FR-01: fake users for the auth context (no real backend, NFR-12)
 const TEST_USERS: Record<string, { name: string; roles: string }> = {
   admin: { name: "Alice Admin", roles: "admin" },
   usecase: { name: "Uma Use-Case", roles: "use_case_viewer" },
@@ -36,6 +37,7 @@ export const useUserSwitch = () => {
   return ctx;
 };
 
+// FR-01 / FR-04: AuthProvider with a fake user; setKey switches it
 export const StubAuthProvider = ({ children }: { children: ReactNode }) => {
   const [key, setKeyState] = useState(initialKey);
   const setKey = (k: string) => {

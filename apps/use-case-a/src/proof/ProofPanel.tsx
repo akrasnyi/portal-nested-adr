@@ -31,6 +31,7 @@ const shareScopeReport = () => {
   return { instances, providers: [...providers], loaded };
 };
 
+// FR-13 / NFR-10: diagnostics rendered as a table (data-check rows). TODO: no [mf-check] console logs, not behind VITE_MF_DEBUG
 export const ProofPanel = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -52,8 +53,10 @@ export const ProofPanel = () => {
   const livePathname = window.location.pathname.replace(/^\/V1(?=\/|$)/, "") || "/";
 
   const checks: { id: string; ok: boolean; detail: string }[] = [
+    // FR-13 / AC-2: window.__shell.React === React
     { id: "react", ok: s.React === React, detail: `React ${React.version}` },
     {
+      // FR-13 / AC-3: useQueryClient() === shell's QueryClient
       id: "query-client",
       ok:
         queryClient === s.queryClient &&
@@ -62,15 +65,19 @@ export const ProofPanel = () => {
         tenant.data === s.queryClient.getQueryData(["tenant"]),
       detail: `tenant=${JSON.stringify(tenant.data)} fetched=${tenantFetched}`,
     },
+    // FR-14: AuthContext identity (singleton contract, not a Symbol.for registry)
     { id: "auth-context", ok: AuthContext === s.AuthContext, detail: "AuthContext identity" },
     { id: "contract-module", ok: sameContract, detail: `${Object.keys(contract).length} exports compared` },
+    // FR-09 / FR-13 / AC-4: shell user name visible in Use case A
     { id: "auth-user", ok: !!user?.name, detail: user?.name ?? "no user" },
     {
+      // FR-13 / AC-5: useInRouterContext() + same router contexts as the shell
       id: "router",
       ok: useInRouterContext() && sameRouter && livePathname === pathname,
       detail: `router path ${pathname}; window path ${window.location.pathname}`,
     },
     {
+      // NFR-08 / AC-7: exactly one react provider in the share scope
       id: "share-scope",
       ok: share.providers.length === 1 && share.loaded !== "none",
       detail: `react providers: [${share.providers.join(", ")}]; loaded: ${share.loaded}; instances: [${share.instances.join(", ")}]`,

@@ -25,6 +25,7 @@ A webpack spike by a colleague worked but needed the shell to list **itself** in
     - the URL is baked into App Host's build;
     - each remote needs a hand-written `declare module`;
     - a failed static import is memoised by the browser and never recovers without a runtime `registerRemotes({ force: true })` fallback.
+- **Update (2026-11-02):** the code now uses build-time `remotes` at both levels with `shareStrategy: "loaded-first"`, which removes the eager fetch; see the note in [ADR-0003](0003-runtime-remote-loading.md) and `docs/progress.md`. The runtime loaders and their retry fix were removed.
 - **Problems found:** (1) after a failed entry load the browser memoises the failed `import()`, so Retry needed a cache-busting re-registration (fixed); (2) the boundary stayed in its error state after navigation (fixed); (3) on a cold Vite dev cache, the first page load is interrupted once by the dependency optimizer's reload ("optimized dependencies changed. reloading"). Dev-only; the next load works.
 
 ## Decision

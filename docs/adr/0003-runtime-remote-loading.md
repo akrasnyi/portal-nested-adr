@@ -3,6 +3,7 @@
 - **Status:** Proposed
 - **Date:** 2026-11-02
 - **Related:** [ADR-0001](0001-nested-topology.md), [ADR-0002](0002-type-sharing.md)
+- **Note (2026-11-02):** the code no longer follows this decision. Both hosts use build-time `remotes` with `shareStrategy: "loaded-first"` (see `docs/progress.md`). `loaded-first` removes the eager entry fetch measured below (each `remoteEntry.js` is requested only when its route opens, dev and build). The other trade-offs in "Why not build-time `remotes`" still hold: no retry without a page reload, URLs in the build config, hand-written `declare module` per remote.
 - **Evidence:** [results.md](../results.md), [results-failures.md](../results-failures.md), [results-static-remotes.md](../results-static-remotes.md), [results-manifest.md](../results-manifest.md)
 
 ## Context

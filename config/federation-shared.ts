@@ -17,6 +17,7 @@ const installedVersion = (key: string) => {
 
 // Libraries: exact and identical in the shell and every remote.
 // react-router holds the router contexts that react-router-dom re-exports, so both are shared
+// NFR-01 / NFR-02: exact requiredVersion read from the single lockfile install; singleton + strictVersion; default share scope. TODO NFR-02: react/jsx-runtime, react-dom/client not listed explicitly
 const exact = ["react", "react-dom", "react-router", "react-router-dom", "@tanstack/react-query"];
 
 // The contract follows semver, so a remote accepts any shell contract with the same major that is

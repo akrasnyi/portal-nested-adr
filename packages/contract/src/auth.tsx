@@ -16,6 +16,7 @@ export interface AuthUser {
   allowedModules: ModuleId[];
 }
 
+// FR-14: TODO plain createContext, no Symbol.for("shell.auth.context") registry; identity relies on @portal/contract being a shared singleton
 export const AuthContext = createContext<{ user: AuthUser | null } | null>(null);
 
 // Only the shell renders this
@@ -23,6 +24,7 @@ export const AuthProvider = ({ user, children }: { user: AuthUser | null; childr
   <AuthContext value={{ user }}>{children}</AuthContext>
 );
 
+// FR-09 / AC-4: Use case A (= CAD) reads the shell user through this hook
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used inside the shell's AuthProvider (second copy of @portal/contract?)");

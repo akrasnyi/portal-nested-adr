@@ -1,3 +1,4 @@
+// NFR-11: one command for dev (npm run dev, spec: dev:all). TODO: prod needs two (npm run build && npm run serve, spec: preview:all)
 // Starts the three dev servers; Ctrl+C stops all
 import { spawn } from "node:child_process";
 import path from "node:path";

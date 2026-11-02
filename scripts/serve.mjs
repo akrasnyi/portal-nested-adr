@@ -1,3 +1,4 @@
+// NFR-04 / NFR-06 / NFR-07: single-origin production server instead of vite preview on 5174/5175
 // Production single-origin server on :4174 (stands in for the API gateway + asset proxy)
 // /V1/mf/<app>/*  -> apps/<app>/dist/* (missing file => 404, never index.html)
 // any other /V1/* -> shell index.html

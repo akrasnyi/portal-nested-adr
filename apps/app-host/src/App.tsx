@@ -1,7 +1,6 @@
 import { RemoteBoundary, useBreadcrumb } from "@portal/contract";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 
-import { loadUseCase } from "./load-use-case";
 import { USE_CASES } from "./use-cases";
 
 import "./app-host.css";
@@ -19,6 +18,7 @@ const Catalog = () => (
   </section>
 );
 
+// FR-06 / FR-11a: App Host root exposed as ./App; contributes the "App Host" breadcrumb
 export default function App() {
   useBreadcrumb("App Host");
   return (
@@ -37,17 +37,14 @@ export default function App() {
         </ul>
       </aside>
       <div className="content">
+        {/* FR-08: relative routes on the shell's router (no own Router); use-case-a/* (spec: cad/*) rendered via RemoteBoundary (React.lazy over import("useCaseA/App")) */}
         <Routes>
           <Route index element={<Catalog />} />
           {USE_CASES.map((uc) => (
             <Route
               key={uc.id}
               path={`${uc.path}/*`}
-              element={<RemoteBoundary id={uc.remoteId} load={() =>
-                import.meta.env.VITE_STATIC_REMOTES
-                  ? import("./load-static").then((m) => m.loadStatic(uc))
-                  : loadUseCase(uc)
-              } />}
+              element={<RemoteBoundary id={uc.remoteId} load={uc.load} />}
             />
           ))}
           <Route path="*" element={<Navigate to="." replace />} />
