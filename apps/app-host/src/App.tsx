@@ -39,11 +39,13 @@ export default function App() {
       <div className="content">
         <Routes>
           <Route index element={<Catalog />} />
+          {/* FR-08: relative use-case-a/* routes built from USE_CASES; no own Router here */}
           {USE_CASES.map((uc) => (
             <Route
               key={uc.id}
               path={`${uc.path}/*`}
               element={<RemoteBoundary id={uc.remoteId} load={() =>
+                // Option A: loadUseCase (runtime) unless the static switch is on (FR-15)
                 import.meta.env.VITE_STATIC_REMOTES
                   ? import("./load-static").then((m) => m.loadStatic(uc))
                   : loadUseCase(uc)

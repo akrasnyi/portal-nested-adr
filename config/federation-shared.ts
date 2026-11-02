@@ -17,6 +17,7 @@ const installedVersion = (key: string) => {
 
 // Libraries: exact and identical in the shell and every remote.
 // react-router holds the router contexts that react-router-dom re-exports, so both are shared
+// NFR-01: exact pins, the same for every app. NFR-02: TODO subpaths (react/jsx-runtime, react-dom/client) not listed
 const exact = ["react", "react-dom", "react-router", "react-router-dom", "@tanstack/react-query"];
 
 // The contract follows semver, so a remote accepts any shell contract with the same major that is

@@ -18,6 +18,7 @@ export const PortalLayout = () => {
         <strong>Portal shell</strong>
         <Link to={ROUTES.HOME}>Home</Link>
         <Link to={ROUTES.APP_HOST}>App Host</Link>
+        {/* FR-04: user select (4 fake users); the header name below re-renders */}
         <label>
           User{" "}
           <select data-testid="user-select" value={key} onChange={(e) => setKey(e.target.value)}>
@@ -32,6 +33,7 @@ export const PortalLayout = () => {
         <span>
           path: <code data-testid="shell-pathname">{pathname}</code>
         </span>
+        {/* FR-05: context API is useBreadcrumb(s); TODO no DOM mount node (#shell-breadcrumbs) for portals */}
         <nav data-testid="breadcrumbs">{crumbs.join(" > ")}</nav>
       </header>
       <main>

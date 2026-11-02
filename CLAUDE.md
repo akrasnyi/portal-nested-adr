@@ -25,6 +25,9 @@ On a cold Vite cache, the first dev page load is interrupted once by the depende
 - The shared list is identical in all apps. Libraries use `singleton` + `strictVersion` + **exact** versions. `@portal/contract` uses `^<installed>` (semver, starts at 1.0.0). See ADR-0002.
 - The shell never declares use cases. Remotes are registered with `registerRemotes` + `loadRemote`, with no build-time `remotes` by default. The build-time variant exists only behind `APP_HOST_STATIC_REMOTES=1` (see `docs/results-static-remotes.md`).
 - `main.tsx` only does `import("./bootstrap")` (the async boundary).
+
+## Changing things
+- Requirement tags `FR-xx` / `NFR-xx` / `Option A:` live in code comments. See `docs/progress.md`. When you change behaviour, keep the tags and the status in sync.
 - Routes inside remotes are relative. The shell mounts `/app-host/*`, and App Host mounts `<path>/*`.
 - Guards (`RequireModule`) run before `RemoteBoundary`, so a forbidden remote is never requested.
 - Production URL contract: files at `/V1/mf/<app>/`. A missing file there returns 404. Every other `/V1/*` path serves the shell's `index.html`. Router basename is `/V1` in prod and `/` in dev.

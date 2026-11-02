@@ -12,6 +12,7 @@ export const router = createBrowserRouter(
       element: <PortalLayout />,
       children: [
         { path: "/", element: <HomePage /> },
+        // Option A: the route loads appHost at runtime (loadRemoteApp → loadRemote); FR-02: /app-host/* renders App Host
         {
           path: "/app-host/*",
           element: (

@@ -10,6 +10,7 @@ export const resolveEntry = (entry: string) =>
 const registered = new Set<string>();
 const failures = new Map<string, number>();
 
+// Option A: runtime loader (registerRemotes + loadRemote), the default. FR-15: the static alternative is load-static.ts
 // Lazy: registered on the first render of the use-case route, not when App Host mounts
 export const loadUseCase = async (uc: UseCase): Promise<RemoteModule> => {
   // Evidence for docs/results.md: which runtime instance the module-level functions hit

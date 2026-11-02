@@ -16,6 +16,7 @@ export interface AuthUser {
   allowedModules: ModuleId[];
 }
 
+// FR-14: TODO plain createContext, no Symbol.for registry; identity relies on the shared @portal/contract singleton
 export const AuthContext = createContext<{ user: AuthUser | null } | null>(null);
 
 // Only the shell renders this

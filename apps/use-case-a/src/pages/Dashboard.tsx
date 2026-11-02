@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ProofPanel } from "../proof/ProofPanel";
 
 export const Dashboard = () => {
+  // FR-10: Link and useNavigate for in-app navigation. TODO Forward not verified (Back only, results.md)
   useBreadcrumb("Dashboard");
   const navigate = useNavigate();
   return (

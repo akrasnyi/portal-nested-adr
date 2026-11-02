@@ -2,6 +2,9 @@
 
 Proof for **[ADR-0001: nested Module Federation topology](docs/adr/0001-nested-topology.md)** , **[ADR-0002: sharing types between repos](docs/adr/0002-type-sharing.md)** and **[ADR-0003: loading remotes through the runtime API](docs/adr/0003-runtime-remote-loading.md)**: shell → App Host → Use case A on Vite 5 + `@module-federation/vite` 1.7.2. The structure mirrors our production portal: layers, `federationShared`, `RemoteBoundary`, runtime remotes from `config.json`, roles → modules, and the URL contract. Auth is stubbed and there is no design system.
 
+Requirements of the spike (FR/NFR/AC IDs, with the runtime API as Option A): [docs/requirements.md](docs/requirements.md)
+Status of each requirement against the code, with the `FR-xx` / `NFR-xx` / `Option A:` tags in the source: [docs/progress.md](docs/progress.md)
+
 ```
 apps/shell     host, :5170    routes /app-host/* → App Host (guarded by RequireModule)
 apps/app-host   remote + host, :5174   USE_CASES → catalog, sidebar, routes; registers Use case A at runtime

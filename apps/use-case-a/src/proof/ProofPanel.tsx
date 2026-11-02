@@ -31,8 +31,10 @@ const shareScopeReport = () => {
   return { instances, providers: [...providers], loaded };
 };
 
+// FR-13: TODO results go to this table, not [mf-check] console logs. NFR-10: TODO no VITE_MF_DEBUG flag
 export const ProofPanel = () => {
   const queryClient = useQueryClient();
+  // FR-09: the auth-user row shows useAuth().user.name
   const { user } = useAuth();
   const { pathname } = useLocation();
   const tenant = useQuery<{ id: string; name: string }>({
@@ -43,6 +45,7 @@ export const ProofPanel = () => {
     },
   });
   const s = shell();
+  // NFR-08: one react provider, counted by origin (portal_host), see results.md
   const share = shareScopeReport();
   const sameContract = Object.keys(contract).every((k) => (contract as any)[k] === s.contractModule?.[k]);
   // react-router is shared by react-router-dom: Use case A's router contexts must be the shell's

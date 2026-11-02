@@ -6,6 +6,7 @@ import type { UseCase } from "./use-cases";
 
 let failures = 0;
 
+// FR-15: Option B, the static loader. Only with APP_HOST_STATIC_REMOTES=1, not the default.
 // Experiment (APP_HOST_STATIC_REMOTES=1): Use case A is a build-time remote of App Host.
 // A failed static import() is memoised by the browser (also the generated loadRemote wrapper module), so a
 // retry re-registers the same name with a cache-busting entry and goes through the runtime loadRemote.

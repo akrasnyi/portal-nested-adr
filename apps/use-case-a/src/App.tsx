@@ -8,9 +8,12 @@ const Crash = () => {
   throw new Error("Use case A crash route: deliberate render error");
 };
 
+// FR-09: exposed as ./App; the user name is shown by ProofPanel
 export default function App() {
+  // FR-11: (a) breadcrumb via the shell's context. TODO (b) no createPortal into the shell DOM
   useBreadcrumb("Use case A");
   return (
+    // FR-10: nested relative routes; no Router here (the shell's and App Host's are used)
     <Routes>
       <Route index element={<Dashboard />} />
       <Route path="crash" element={<Crash />} />

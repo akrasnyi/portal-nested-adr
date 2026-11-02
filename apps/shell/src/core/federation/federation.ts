@@ -5,6 +5,7 @@ import { getRuntimeConfig } from "@/shared/config/runtime-config";
 
 import { resolveRemoteEntry } from "./resolve-remote-entry";
 
+// Option A: remotes are registered at runtime from config.json; the shell never names Use case A (FR-03, NFR-03)
 export const initFederation = () => {
   const remotes = getRuntimeConfig().remotes ?? [];
   if (remotes.length === 0) return;
@@ -13,6 +14,7 @@ export const initFederation = () => {
 
 const failures = new Map<string, number>();
 
+// Option A: loadRemote("<id>/App") at runtime, not import("<id>/App") (FR-02)
 export const loadRemoteApp = async (id: string): Promise<RemoteModule> => {
   let mod: RemoteModule | null;
   try {

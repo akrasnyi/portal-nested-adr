@@ -18,6 +18,7 @@ declare global {
 await loadRuntimeConfig();
 initFederation();
 // Spike proof globals: set BEFORE any remote loads, remotes compare their imports against these
+// FR-12: TODO globals are window.__shell.* and always set (spec: __shellReact / __shellQueryClient behind VITE_MF_DEBUG)
 window.__shell = { React, ReactDOM, ReactRouter, queryClient, AuthContext, contractModule };
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

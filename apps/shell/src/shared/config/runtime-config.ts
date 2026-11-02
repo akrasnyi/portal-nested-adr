@@ -10,6 +10,7 @@ export interface RuntimeConfig {
 
 let config: RuntimeConfig | null = null;
 
+// Option A: the shell's remote descriptors (appHost) come from config.json. NFR-05: TODO not from VITE_* env
 export async function loadRuntimeConfig(): Promise<RuntimeConfig> {
   const file = import.meta.env.DEV ? "config.dev.json" : "config.json";
   const res = await fetch(`${import.meta.env.BASE_URL}${file}`);

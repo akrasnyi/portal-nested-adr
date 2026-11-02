@@ -6,6 +6,7 @@ import { StubAuthProvider } from "@/features/auth";
 
 import { queryClient } from "./query-client";
 
+// FR-01: TODO spec wants BrowserRouter + LayoutProvider; here one QueryClient, fake-user auth and breadcrumbs (router in App.tsx)
 export const AppProviders = ({ children }: { children: ReactNode }) => (
   <QueryClientProvider client={queryClient}>
     <StubAuthProvider>

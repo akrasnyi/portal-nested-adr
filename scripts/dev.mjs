@@ -1,4 +1,5 @@
 // Starts the three dev servers; Ctrl+C stops all
+// NFR-11: one command for dev. TODO the build and serve steps are two commands; no dev:all / preview:all
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";

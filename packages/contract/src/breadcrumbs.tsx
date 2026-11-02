@@ -13,6 +13,7 @@ interface Crumb {
   label: string;
 }
 
+// FR-14: TODO plain createContext, no Symbol.for("shell.<name>.context") registry
 const BreadcrumbsContext = createContext<{
   crumbs: Crumb[];
   setCrumbs: Dispatch<SetStateAction<Crumb[]>>;
@@ -32,6 +33,7 @@ export const useBreadcrumbs = () => {
 // Render runs parent-first but effects run child-first, so order is taken at first render
 let nextOrder = 0;
 
+// FR-05: layout context API for remotes. FR-11: (a) the crumb is removed on unmount
 export const useBreadcrumb = (label: string) => {
   const ctx = useContext(BreadcrumbsContext);
   if (!ctx) throw new Error("useBreadcrumb outside BreadcrumbsProvider");
