@@ -31,6 +31,7 @@ export default defineConfig(({ command }) => ({
       filename: "remoteEntry.js",
       // FR-09: Use case A (= CAD) exposes ./App
       exposes: { "./App": "./src/App.tsx" },
+      manifest: true,
       shared,
       // NFR-08: loaded-first, so the shell (loaded first) provides the singletons and remote entries load only when used;
       // version-first fetched every declared entry at startup and let the last remote provide React. Identical in all apps (NFR-02)
