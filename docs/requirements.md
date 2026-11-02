@@ -9,8 +9,8 @@ checks each requirement against it. The "Option A" notes say how a requirement r
   them with `loadRemote("<name>/App")` from `@module-federation/runtime`. The shell gets the App Host URL from
   `public/config.json` (`config.dev.json` in dev). App Host gets the Use case A URL from `USE_CASES` in code
   (`apps/app-host/src/use-cases.ts`). No `remotes` in any build config. See [ADR-0003](adr/0003-runtime-remote-loading.md).
-- **Option B: build-time `remotes`.** Only as the experiment `APP_HOST_STATIC_REMOTES=1` in App Host
-  (`import("useCaseA/App")`). See [results-static-remotes.md](results-static-remotes.md).
+- **Option B: build-time `remotes`.** Not implemented in this branch. It is evaluated only in
+  [results-static-remotes.md](results-static-remotes.md) and [ADR-0003](adr/0003-runtime-remote-loading.md).
 
 An alternative PR uses the same requirement IDs with build-time remotes as the default (Option B). Status of each requirement against the code: [progress.md](progress.md).
 
@@ -57,7 +57,7 @@ The spike result must be recorded as one of: **works** / **fallback** / **blocke
 | FR-12 | diagnostics | Shell sets `window.__shellReact = React` and `window.__shellQueryClient = queryClient` when diagnostics are enabled (dev, or build with `VITE_MF_DEBUG=true`). | Globals exist in both modes when the flag is on. | — |
 | FR-13 | diagnostics | Use case A logs `[mf-check]` results: `window.__shellReact === React`, `useQueryClient() === window.__shellQueryClient`, `useInRouterContext()`, current `useAuth().user`. | All checks log `true` / expected user. | — |
 | FR-14 | contexts | Shared contexts (Auth, Layout) are created through a global registry: `globalThis[Symbol.for("shell.<name>.context")] ??= createContext(...)`, so duplicate module copies resolve to the same context object. | Use case A reads the shell context even if the contracts module is bundled more than once. | — |
-| FR-15 | fallback | App Host supports an alternative Use case A loader via runtime API (`registerRemotes` + `loadRemote("useCaseA/App")` from `@module-federation/enhanced/runtime`), switchable via `VITE_USE_CASE_A_LOADER=static\|runtime`. | Both loaders render Use case A; diagnostics are compared between them. | Roles are reversed. The runtime loader is the default. The static loader (Option B) is the switch: build-time `APP_HOST_STATIC_REMOTES=1`. Both loaders were checked with the same ProofPanel checks. |
+| FR-15 | fallback | App Host supports an alternative Use case A loader via runtime API (`registerRemotes` + `loadRemote("useCaseA/App")` from `@module-federation/enhanced/runtime`), switchable via `VITE_USE_CASE_A_LOADER=static\|runtime`. | Both loaders render Use case A; diagnostics are compared between them. | Roles are reversed. The runtime loader is the default. The static loader (Option B) is not implemented in this branch; its checks are in results-static-remotes.md. |
 
 ## Non-Functional Requirements
 
@@ -94,7 +94,7 @@ The spike result must be recorded as one of: **works** / **fallback** / **blocke
 | Outcome | Meaning | Option A |
 |---|---|---|
 | **works** | AC-1…AC-7 pass in both modes using static `remotes` in App Host. | AC-1…AC-7 pass in both modes with the runtime loader (`registerRemotes` + `loadRemote`, the default). Static `remotes` (Option B) reached the same verdict, [results-static-remotes.md](results-static-remotes.md). |
-| **fallback** | AC-1…AC-7 pass in both modes only when App Host loads Use case A via `loadRemote`. | AC-1…AC-7 pass in both modes only with the static `remotes` (`APP_HOST_STATIC_REMOTES=1`). |
+| **fallback** | AC-1…AC-7 pass in both modes only when App Host loads Use case A via `loadRemote`. | AC-1…AC-7 pass in both modes only with the static `remotes` (Option B, not implemented in this branch). |
 | **blocker** | At least one AC fails in at least one mode with both loaders. Document the failing AC, mode and root cause. | Same, for the runtime loader and the static experiment. |
 
 ## Risks & Pitfalls

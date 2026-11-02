@@ -22,9 +22,8 @@ LayoutProvider = `BreadcrumbsProvider`, diagnostics = Use case A ProofPanel.
 - **shareStrategy:** the default `version-first` in every app (not set in any `vite.config.ts`). The runtime path has no static remote, so
   Use case A's entry is requested only when its route opens. With the static remote, the entry is fetched when App Host loads
   (results-static-remotes.md, "When is the entry fetched").
-- **Build-time remotes (Option B):** off by default. Experiment `APP_HOST_STATIC_REMOTES=1` in [app-host/vite.config.ts](../apps/app-host/vite.config.ts)
-  with [load-static.ts](../apps/app-host/src/load-static.ts). `APP_HOST_MANIFEST=1` (mf-manifest.json as the entry) is also an experiment
-  (see [results-manifest.md](results-manifest.md)).
+- **Build-time remotes (Option B):** not implemented in this branch. It is evaluated only in [results-static-remotes.md](results-static-remotes.md)
+  and [ADR-0003](adr/0003-runtime-remote-loading.md). The mf-manifest.json entry is evidence only in [results-manifest.md](results-manifest.md).
 
 Status: ✅ Passed · 🟡 In progress / gap. Statuses come from the code and the evidence in [results.md](results.md),
 [results-failures.md](results-failures.md), [results-static-remotes.md](results-static-remotes.md) and [results-manifest.md](results-manifest.md).
@@ -40,7 +39,7 @@ Nothing was re-run for this document.
 | FR-04 | ✅ | [PortalLayout.tsx](../apps/shell/src/widgets/portal-layout/PortalLayout.tsx), [StubAuthProvider.tsx](../apps/shell/src/features/auth/StubAuthProvider.tsx) | `<select>` with 4 fake users (also `?user=`); header name re-renders. "user switch" PASS in dev and build (results.md) |
 | FR-05 | 🟡 | [breadcrumbs.tsx](../packages/contract/src/breadcrumbs.tsx), [PortalLayout.tsx](../apps/shell/src/widgets/portal-layout/PortalLayout.tsx) | Context API exists (`useBreadcrumb`, `useBreadcrumbs`). Gap: no DOM mount node (`#shell-breadcrumbs`) for portals; breadcrumbs render in the shell `<nav>` |
 | FR-06 | ✅ | [app-host/vite.config.ts](../apps/app-host/vite.config.ts) | Exposes `./App` |
-| FR-07 | 🟡 | [use-cases.ts](../apps/app-host/src/use-cases.ts), [app-host/vite.config.ts](../apps/app-host/vite.config.ts) | Option A: no build-time remote. URL in `USE_CASES`: `http://localhost:5175/remoteEntry.js` (dev), `mf/use-case-a/remoteEntry.js` (build). Gaps: not a `VITE_*` env variable; `remoteEntry.js` instead of `mf-manifest.json` (the manifest is the experiment `APP_HOST_MANIFEST=1`) |
+| FR-07 | 🟡 | [use-cases.ts](../apps/app-host/src/use-cases.ts), [app-host/vite.config.ts](../apps/app-host/vite.config.ts) | Option A: no build-time remote. URL in `USE_CASES`: `http://localhost:5175/remoteEntry.js` (dev), `mf/use-case-a/remoteEntry.js` (build). Gaps: not a `VITE_*` env variable; `remoteEntry.js` instead of `mf-manifest.json` (the manifest entry is evaluated only in results-manifest.md) |
 | FR-08 | ✅ | [app-host/App.tsx](../apps/app-host/src/App.tsx), [use-cases.ts](../apps/app-host/src/use-cases.ts) | Relative `use-case-a/*` route built from `USE_CASES`; `RemoteBoundary` → `loadUseCase` → `loadRemote("useCaseA/App")`. No own Router in App Host |
 | FR-09 | ✅ | [use-case-a/App.tsx](../apps/use-case-a/src/App.tsx), [ProofPanel.tsx](../apps/use-case-a/src/proof/ProofPanel.tsx), [vite.config.ts](../apps/use-case-a/vite.config.ts) | Exposes `./App`. Breadcrumb "Use case A" and the ProofPanel `auth-user` row show `useAuth().user.name` (results.md) |
 | FR-10 | 🟡 | [use-case-a/App.tsx](../apps/use-case-a/src/App.tsx), [Dashboard.tsx](../apps/use-case-a/src/pages/Dashboard.tsx), [ReportDetails.tsx](../apps/use-case-a/src/pages/ReportDetails.tsx) | Index + `reports/:reportId`, `Link` + `useNavigate`, no own Router. Back checked in dev and build (results.md). Gap: Forward not recorded |
@@ -48,7 +47,7 @@ Nothing was re-run for this document.
 | FR-12 | 🟡 | [bootstrap.tsx](../apps/shell/src/bootstrap.tsx) | Globals exist as `window.__shell.{React, ReactDOM, ReactRouter, queryClient, AuthContext, contractModule}`, always set. Gaps: names differ from `__shellReact` / `__shellQueryClient`; not behind dev or `VITE_MF_DEBUG` |
 | FR-13 | 🟡 | [ProofPanel.tsx](../apps/use-case-a/src/proof/ProofPanel.tsx) | All checks exist (react, query-client, auth-context, contract-module, auth-user, router, share-scope). Gap: they go to a UI table, not `[mf-check]` console logs |
 | FR-14 | 🟡 | [auth.tsx](../packages/contract/src/auth.tsx), [breadcrumbs.tsx](../packages/contract/src/breadcrumbs.tsx) | Plain `createContext`; identity relies on `@portal/contract` being a shared singleton (checked by `auth-context` / `contract-module`). Gap: no `Symbol.for` registry |
-| FR-15 | 🟡 | [app-host/vite.config.ts](../apps/app-host/vite.config.ts), [load-static.ts](../apps/app-host/src/load-static.ts), [App.tsx](../apps/app-host/src/App.tsx) | Option A: runtime loader is the default; static loader is the switch `APP_HOST_STATIC_REMOTES=1` (build time, exposed as `VITE_STATIC_REMOTES`). Both pass the ProofPanel checks (results-static-remotes.md). Gaps: the switch is not `VITE_USE_CASE_A_LOADER=static\|runtime`; it needs a rebuild |
+| FR-15 | 🟡 | [app-host/vite.config.ts](../apps/app-host/vite.config.ts), [App.tsx](../apps/app-host/src/App.tsx) | Option A: runtime loader is the only loader in this branch. Static loader (Option B) is evaluated only in results-static-remotes.md. Gaps: no `VITE_USE_CASE_A_LOADER=static\|runtime` switch; the static loader is not in this branch |
 
 ## Non-functional requirements
 
@@ -87,6 +86,6 @@ Dev and build columns are taken from [results.md](results.md) (the "Results" tab
 | Field | Value |
 |---|---|
 | Outcome | _pending_ |
-| Approach | _runtime `registerRemotes` + `loadRemote` (Option A, default); static `remotes` is the experiment `APP_HOST_STATIC_REMOTES=1`; context registry: no (singleton contract)_ |
+| Approach | _runtime `registerRemotes` + `loadRemote` (Option A, default); static `remotes` (Option B) is not implemented in this branch; context registry: no (singleton contract)_ |
 | Problems found | _pending_ |
 | Date / versions tested | _pending_ |

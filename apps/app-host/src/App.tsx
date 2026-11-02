@@ -44,12 +44,7 @@ export default function App() {
             <Route
               key={uc.id}
               path={`${uc.path}/*`}
-              element={<RemoteBoundary id={uc.remoteId} load={() =>
-                // Option A: loadUseCase (runtime) unless the static switch is on (FR-15)
-                import.meta.env.VITE_STATIC_REMOTES
-                  ? import("./load-static").then((m) => m.loadStatic(uc))
-                  : loadUseCase(uc)
-              } />}
+              element={<RemoteBoundary id={uc.remoteId} load={() => loadUseCase(uc)} />}
             />
           ))}
           <Route path="*" element={<Navigate to="." replace />} />
