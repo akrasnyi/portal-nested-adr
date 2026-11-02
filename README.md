@@ -34,6 +34,22 @@ The nested topology works on Vite 5 + `@module-federation/vite` 1.7.2, in both `
 
 Details: [ADR-0001](docs/adr/0001-nested-topology.md#spike-result-works).
 
+## Acceptance criteria
+
+The brief's criteria, with this repo's names (App Host, Use case A). Checked in `vite dev` (`:5170`) and the production build (`:4174/V1`).
+
+| # | Criterion | dev | build | Evidence |
+|---|---|---|---|---|
+| 1 | Use case A renders inside App Host inside the shell at `http://localhost:5170/app-host/use-case-a` | PASS | PASS | ProofPanel renders on that route; build: `/V1/app-host/use-case-a` |
+| 2 | `React` in Use case A is the shell's (`window.__shell.React === React`), and `useQueryClient()` returns the shell's instance | PASS | PASS | ProofPanel `react`, `query-client`: the shell's `["tenant"]` cache is read without a fetch |
+| 3 | `useAuth()` in Use case A returns the shell's user and follows a user switch in the shell | PASS | PASS | ProofPanel `auth-user`, `auth-context`; switch in the header updates Use case A |
+| 4 | react-router navigation inside Use case A works and keeps the shell's URL and history intact | PASS | PASS | `navigate("reports/42")` updates the window path, shell header and breadcrumbs; Back and deep-link reload work |
+| 5 | DevTools → Network shows **one** React chunk | PASS | PASS | React core fetched only from the shell; 0 React files from App Host or Use case A; one provider `portal_host` in the share scope |
+| 6 | All of the above in dev and build/preview | PASS | PASS | [results.md](docs/results.md) |
+| 7 | Result recorded as works / fallback (only via `loadRemote`) / blocker, with approach and problems | **works** | | [Verdict](#verdict-works); runtime `loadRemote` is the chosen design, and build-time `remotes` works too ([results](docs/results-static-remotes.md)) |
+
+The brief names the global `window.__shellReact`. This repo exposes it as `window.__shell.React`, next to the shell's `queryClient`, `AuthContext` and contract module.
+
 ## Run
 
 ```bash
