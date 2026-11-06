@@ -1,7 +1,7 @@
 import * as contract from "@portal/contract";
 import { AuthContext, useAuth } from "@portal/contract";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import React from "react";
+import React, { useEffect } from "react";
 import * as ReactRouter from "react-router";
 import { useInRouterContext, useLocation } from "react-router-dom";
 
@@ -9,6 +9,9 @@ import styles from "./ProofPanel.module.css";
 
 // Set by the shell before any remote loads (spike proof globals)
 const shell = () => (window as any).__shell as Record<string, any>;
+
+// VITE_MF_DEBUG=true (dev or build) logs the [mf-check] lines to the console. Read at build time; default off.
+const MF_DEBUG = import.meta.env.VITE_MF_DEBUG === "true";
 
 let tenantFetched = false;
 
@@ -31,12 +34,13 @@ const shareScopeReport = () => {
   return { instances, providers: [...providers], loaded };
 };
 
-// FR-13: TODO results go to this table, not [mf-check] console logs. NFR-10: TODO no VITE_MF_DEBUG flag
+// FR-13: the table is the proof; with VITE_MF_DEBUG the same identity checks also go to the console as [mf-check]
 export const ProofPanel = () => {
   const queryClient = useQueryClient();
   // FR-09: the auth-user row shows useAuth().user.name
   const { user } = useAuth();
   const { pathname } = useLocation();
+  const inRouter = useInRouterContext();
   const tenant = useQuery<{ id: string; name: string }>({
     queryKey: ["tenant"],
     queryFn: () => {
@@ -70,7 +74,7 @@ export const ProofPanel = () => {
     { id: "auth-user", ok: !!user?.name, detail: user?.name ?? "no user" },
     {
       id: "router",
-      ok: useInRouterContext() && sameRouter && livePathname === pathname,
+      ok: inRouter && sameRouter && livePathname === pathname,
       detail: `router path ${pathname}; window path ${window.location.pathname}`,
     },
     {
@@ -79,6 +83,18 @@ export const ProofPanel = () => {
       detail: `react providers: [${share.providers.join(", ")}]; loaded: ${share.loaded}; instances: [${share.instances.join(", ")}]`,
     },
   ];
+
+  useEffect(() => {
+    if (!MF_DEBUG) return;
+    const w = window as any;
+    const results: [string, boolean, string][] = [
+      ["react", w.__shellReact === React, `shell React ${w.__shellReact ? "set" : "missing"}`],
+      ["query-client", queryClient === w.__shellQueryClient, `shell QueryClient ${w.__shellQueryClient ? "set" : "no"}`],
+      ["in-router-context", inRouter, `pathname ${pathname}`],
+      ["auth-user", !!user, user?.name ?? "no user"],
+    ];
+    for (const [id, ok, detail] of results) console.info(`[mf-check] ${id}=${ok} ${detail}`);
+  }, [queryClient, user, inRouter, pathname]);
 
   return (
     <section className={styles.panel} data-testid="proof-panel">
