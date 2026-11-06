@@ -1,11 +1,8 @@
-/// <reference types="node" />
-
 import fs from "node:fs";
 import path from "node:path";
 
 const repoRoot = path.resolve(__dirname, "..");
 
-// Exact installed version, read from node_modules (workspace packages are symlinked there too)
 const installedVersion = (key: string) => {
   const pkg = key
     .split("/")
@@ -15,13 +12,19 @@ const installedVersion = (key: string) => {
     .version as string;
 };
 
-// Libraries: exact and identical in the shell and every remote.
-// react-router holds the router contexts that react-router-dom re-exports, so both are shared
-// NFR-01: exact pins, the same for every app. NFR-02: TODO subpaths (react/jsx-runtime, react-dom/client) not listed
-const exact = ["react", "react-dom", "react-router", "react-router-dom", "@tanstack/react-query"];
+// NFR-01: exact pins, the same for every app. NFR-02: subpaths are listed too, otherwise each remote
+// bundles its own jsx-runtime (plugin-react imports it in dev) and the React singleton is not shared.
+const exact = [
+  "react",
+  "react-dom",
+  "react/jsx-runtime",
+  "react/jsx-dev-runtime",
+  "react-dom/client",
+  "react-router",
+  "react-router-dom",
+  "@tanstack/react-query",
+];
 
-// The contract follows semver, so a remote accepts any shell contract with the same major that is
-// at least the version it was built against (docs/adr/0002-type-sharing.md)
 export const federationShared = Object.fromEntries([
   ...exact.map((key) => [key, { singleton: true, strictVersion: true, requiredVersion: installedVersion(key) }]),
   [

@@ -49,7 +49,7 @@ Nothing was re-run for this document.
 | ID | Status | Where | Notes / gap |
 |---|---|---|---|
 | NFR-01 | ✅ | [package.json](../package.json), [federation-shared.ts](../config/federation-shared.ts) | Exact pins in the root `package.json` (npm workspaces, apps do not redeclare them), one `package-lock.json`. `npm ls` shows one version each (results.md). `@portal/contract` uses `^` by design (ADR-0002) |
-| NFR-02 | 🟡 | [federation-shared.ts](../config/federation-shared.ts) | One shared list for all apps, `default` scope, `react-router` also shared. Gap: subpaths (`react/jsx-runtime`, `react-dom/client`) not listed. One React copy is confirmed (results.md, AC-7), so check whether they need adding |
+| NFR-02 | ✅ | [federation-shared.ts](../config/federation-shared.ts) | One shared list for all apps, `default` scope, `react-router` also shared. Subpaths `react/jsx-runtime`, `react/jsx-dev-runtime` and `react-dom/client` are listed too. Build check: Use case A and the shell no longer fetch their own `jsx-runtime` copy (only the shell's); the plugin still emits a fallback chunk per app, which is not requested |
 | NFR-03 | ✅ | see FR-03 | Shell knows only `appHost` |
 | NFR-04 | 🟡 | [results.md](results.md) | Dev and build are both verified for the existing checks. Rows with gaps (FR-05, FR-11b, FR-13, AC-5 Forward) are not |
 | NFR-05 | 🟡 | [federation.ts](../apps/shell/src/core/federation/federation.ts), [runtime-config.ts](../apps/shell/src/shared/config/runtime-config.ts), [use-cases.ts](../apps/app-host/src/use-cases.ts) | Option A: URLs come from `config.json` (shell) and `USE_CASES` (App Host), not from `VITE_APP_HOST_URL` / `VITE_USE_CASE_A_URL`. Changing a remote origin is a config or code change |
