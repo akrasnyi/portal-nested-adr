@@ -2,6 +2,7 @@ import path from "node:path";
 import { federation } from "@module-federation/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { chunkFileName } from "../../config/chunk-names";
 import { federationShared } from "../../config/federation-shared";
 
 export default defineConfig(({ command }) => ({
@@ -14,5 +15,5 @@ export default defineConfig(({ command }) => ({
     // Host only: remotes are registered at runtime from config.json (src/core/federation)
     federation({ name: "portal_host", shared: federationShared }),
   ],
-  build: { target: "esnext" },
+  build: { target: "esnext", rollupOptions: { output: { chunkFileNames: chunkFileName } } },
 }));

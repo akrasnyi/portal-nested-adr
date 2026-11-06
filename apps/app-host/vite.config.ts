@@ -1,6 +1,7 @@
 import { federation } from "@module-federation/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { chunkFileName } from "../../config/chunk-names";
 import { federationShared } from "../../config/federation-shared";
 
 export default defineConfig(({ command }) => ({
@@ -18,5 +19,5 @@ export default defineConfig(({ command }) => ({
       shared: federationShared,
     }),
   ],
-  build: { target: "esnext" },
+  build: { target: "esnext", rollupOptions: { output: { chunkFileNames: chunkFileName } } },
 }));

@@ -1,6 +1,7 @@
 import { federation } from "@module-federation/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { chunkFileName } from "../../config/chunk-names";
 import { federationShared } from "../../config/federation-shared";
 
 // Failure experiment switches (default: healthy build). UCA_REACT_REQUIRED=19.1.0 makes Use case A demand a React the shell does not provide;
@@ -33,5 +34,5 @@ export default defineConfig(({ command }) => ({
       shared,
     }),
   ],
-  build: { target: "esnext" },
+  build: { target: "esnext", rollupOptions: { output: { chunkFileNames: chunkFileName } } },
 }));
