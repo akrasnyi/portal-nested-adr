@@ -1,4 +1,4 @@
-import { RemoteBoundary, useBreadcrumb } from "@portal/contract";
+import { RemoteBoundary, ShellPortal, useBreadcrumb } from "@portal/contract";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 
 import { loadUseCase } from "./load-use-case";
@@ -23,6 +23,9 @@ export default function App() {
   useBreadcrumb("App Host");
   return (
     <div className="app-host">
+      <ShellPortal target="shell-breadcrumbs">
+        <span data-testid="app-host-portal">App Host portal</span>
+      </ShellPortal>
       <aside>
         <h2>App Host</h2>
         <ul>

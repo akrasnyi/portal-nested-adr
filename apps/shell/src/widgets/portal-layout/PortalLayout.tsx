@@ -33,8 +33,9 @@ export const PortalLayout = () => {
         <span>
           path: <code data-testid="shell-pathname">{pathname}</code>
         </span>
-        {/* FR-05: context API is useBreadcrumb(s); TODO no DOM mount node (#shell-breadcrumbs) for portals */}
+        {/* FR-05: context API is useBreadcrumb(s); the DOM mount node for remotes' ShellPortal is #shell-breadcrumbs */}
         <nav data-testid="breadcrumbs">{crumbs.join(" > ")}</nav>
+        <nav id="shell-breadcrumbs" />
       </header>
       <main>
         <Outlet />
