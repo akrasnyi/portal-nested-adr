@@ -23,7 +23,7 @@ A webpack spike by a colleague worked but needed the shell to list **itself** in
 
 ## Decision
 
-1. **Nested topology is supported.** App Host registers its use cases at runtime (`registerRemotes` + `loadRemote`) from a typed `USE_CASES` list. The shell registers only App Host. No `remotes` in any build config.
+1. **Nested topology is supported.** App Host registers its use cases at runtime (`registerRemotes` + `loadRemote`) from a typed `USE_CASES` list. The shell declares only App Host. *(Updated: as a static build-time remote since [ADR-0004](0004-hybrid-remote-loading.md); this ADR first had the shell register it at runtime and no `remotes` in any build config.)*
 2. **The shell's contract is a shared singleton workspace package**, `@portal/contract`. It holds `AuthContext`, `useAuth`, `RequireModule`, `RemoteBoundary`, breadcrumbs and `ModuleId`. It is not exposed as `shell/contract`, and **no self-remote** is used.
 3. **`RemoteBoundary` lives in the contract** and is used at both levels. It resets after a failure when the location changes. After a failed entry load, the loader re-registers that remote with a cache-busting entry, so Retry works without a page reload.
 4. **`strictVersion: true` stays on** for every shared library. Libraries use exact versions. The contract uses a semver range; see [ADR-0002](0002-type-sharing.md).

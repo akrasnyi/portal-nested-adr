@@ -21,7 +21,7 @@ docs/          ADR, evidence, screenshots
 
 ## Verdict: **works**
 
-The nested topology works on Vite 5 + `@module-federation/vite` 1.7.2, in both `vite dev` and the production build. Use case A is loaded by App Host, which the shell loads, and it gets the shell's React (one core file fetched), QueryClient, router and session. A user switch in the shell reaches Use case A. Nested navigation keeps the shell's URL and history intact.
+The nested topology works on Vite 5 + `@module-federation/vite` 1.7.2, in both `vite dev` and the production build. Use case A is loaded by App Host, which the shell loads, and it gets the shell's React (one core file fetched), QueryClient, router and session. A user switch in the shell reaches Use case A. Nested navigation keeps the shell's URL and history intact. One acceptance item is still open: AC-5 (Forward navigation was not recorded), see [docs/progress.md](docs/progress.md).
 
 - **Approach (hybrid, [ADR-0004](docs/adr/0004-hybrid-remote-loading.md)):** the shell declares App Host as a static remote in its build config, with `shareStrategy: "loaded-first"`. App Host registers Use case A at runtime (`registerRemotes` + `loadRemote`); the shell never declares Use case A. Shared singletons use `strictVersion`. The shell's contract is a shared singleton package, with no self-remote.
 - **Why:** the shell has one remote, known at build time, so it needs no config file, no fetch before render and no loader of its own. The use cases change often, so they stay at runtime, and App Host can change them without a shell rebuild.
