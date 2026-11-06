@@ -1,7 +1,6 @@
 import { RemoteBoundary, RequireModule } from "@portal/contract";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
-import { loadRemoteApp } from "@/core/federation";
 import { HomePage } from "@/pages/home";
 import { ROUTER_BASENAME } from "@/shared/routes/routes";
 import { PortalLayout } from "@/widgets/portal-layout/PortalLayout";
@@ -12,13 +11,13 @@ export const router = createBrowserRouter(
       element: <PortalLayout />,
       children: [
         { path: "/", element: <HomePage /> },
-        // Option A: the route loads appHost at runtime (loadRemoteApp → loadRemote); FR-02: /app-host/* renders App Host
+        // FR-02: /app-host/* renders App Host from the static remote (shell vite.config.ts), loaded on first visit
         {
           path: "/app-host/*",
           element: (
             <RequireModule moduleId="app-host">
-              {/* canRetryLoad: loadRemoteApp re-registers appHost after a failure, so Retry works in place */}
-              <RemoteBoundary id="appHost" load={Object.assign(() => loadRemoteApp("appHost"), { canRetryLoad: true })} />
+              {/* No canRetryLoad: a failed static remote stays failed in the browser module map and the MF runtime, so only a page reload recovers */}
+              <RemoteBoundary id="appHost" load={() => import("appHost/App")} />
             </RequireModule>
           ),
         },

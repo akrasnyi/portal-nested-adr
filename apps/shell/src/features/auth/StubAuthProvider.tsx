@@ -5,7 +5,7 @@ import { resolveModules } from "./permissions";
 
 const TEST_USERS: Record<string, { name: string; roles: string }> = {
   admin: { name: "Alice Admin", roles: "admin" },
-  usecase: { name: "Uma Use-Case", roles: "use_case_viewer" },
+  apphost: { name: "Ann App-Host", roles: "app_host_viewer" },
   billing: { name: "Bob Billing", roles: "billing_viewer" },
   noroles: { name: "Nick NoRoles", roles: "" },
 };

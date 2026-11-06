@@ -5,9 +5,7 @@ import ReactDOM from "react-dom/client";
 import * as ReactRouter from "react-router";
 
 import { App } from "@/app/App";
-import { initFederation } from "@/core/federation";
 import { queryClient } from "@/core/providers/query-client";
-import { loadRuntimeConfig } from "@/shared/config/runtime-config";
 
 declare global {
   interface Window {
@@ -15,8 +13,6 @@ declare global {
   }
 }
 
-await loadRuntimeConfig();
-initFederation();
 // Spike proof globals: set BEFORE any remote loads, remotes compare their imports against these
 // FR-12: TODO globals are window.__shell.* and always set (spec: __shellReact / __shellQueryClient behind VITE_MF_DEBUG)
 window.__shell = { React, ReactDOM, ReactRouter, queryClient, AuthContext, contractModule };

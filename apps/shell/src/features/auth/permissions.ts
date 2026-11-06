@@ -3,7 +3,7 @@ import { ModuleId } from "@portal/contract";
 // Same role mapping as the reference portal
 const rolePermissions: Record<string, ModuleId[]> = {
   admin: [ModuleId.Billing, ModuleId.Observability, ModuleId.Documentation, ModuleId.AppHost],
-  use_case_viewer: [ModuleId.AppHost],
+  app_host_viewer: [ModuleId.AppHost],
   metrics_viewer: [ModuleId.Observability],
   billing_viewer: [ModuleId.Billing],
 };
