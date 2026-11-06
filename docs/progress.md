@@ -1,4 +1,4 @@
-# Requirements progress (runtime API)
+# Requirements progress (hybrid)
 
 Tracks [requirements.md](requirements.md) against the code in this repo. The shell's only remote is static (build config); App Host
 loads Use case A at runtime.
@@ -16,13 +16,15 @@ LayoutProvider = `BreadcrumbsProvider`, diagnostics = Use case A ProofPanel.
 - **Retry:** App Host's loader catches a failed `loadRemote`, re-registers the same name with `?retry=n` and `{ force: true }`, then rethrows.
   It is marked `canRetryLoad`, so the boundary ([remote-boundary.tsx](../packages/contract/src/remote-boundary.tsx)) offers Retry for a load error.
   The shell's App Host route is not marked, so its load error offers only "Reload page" (Retry for App Host is a page reload: the browser module map and the MF runtime keep the failed static remote).
-  A render error, or any error within 10 s of a remount, offers "Reload page" ([recovery.ts](../packages/contract/src/recovery.ts)).
+  A load error offers Retry only when the loader can retry in place; otherwise "Reload page". A render error offers Retry. Any error within 10 s of a Retry offers "Reload page" ([recovery.ts](../packages/contract/src/recovery.ts)).
   Use case A's Retry was checked in the production build with the block experiment (no document reload); dev not repeated.
 - **Entry timing:** App Host's `remoteEntry.js` is requested when `/app-host` opens, not on the home page (`loaded-first`). Use case A's when its route opens.
 
 Status: ✅ Passed · 🟡 In progress / gap. Statuses come from the code and the evidence in [results.md](results.md) and
 [results-failures.md](results-failures.md).
 Rows for the static remote and the env URLs were re-checked with the change (dev and prod); other rows come from earlier runs.
+
+Counts, recounted from the tables below: FR 11 ✅ and 4 🟡 (15 rows). NFR 6 ✅ and 6 🟡 (12 rows). Acceptance: AC-1…AC-4, AC-6 and AC-7 pass in dev and build; AC-5 is 🟡 in both (Forward not recorded); AC-8 does not apply.
 
 ## Functional requirements
 
@@ -80,7 +82,7 @@ Dev and build columns are taken from [results.md](results.md) (the "Results" tab
 
 | Field | Value |
 |---|---|
-| Outcome | _pending_ |
-| Approach | _runtime `registerRemotes` + `loadRemote`; context registry: no (singleton contract)_ |
-| Problems found | _pending_ |
-| Date / versions tested | _pending_ |
+| Outcome | works, with AC-5 open (Forward not recorded). The definition in [requirements.md](requirements.md) needs AC-1…AC-7 in both modes, so it is not strictly met yet. |
+| Approach | Hybrid: static shell → App Host (`loaded-first`); runtime `registerRemotes` + `loadRemote` for App Host → use cases. Context registry: yes (`getOrCreateContext`, contract 1.2.0). |
+| Problems found | (1) A failed static App Host load needs a page reload; no in-place Retry (ADR-0004). (2) The browser memoises a failed use-case entry; fixed by re-registering with `?retry=n`. (3) The boundary stayed in its error state after navigation; fixed, it resets on location change. (4) Cold Vite dev cache: one forced reload, dev only. |
+| Date / versions tested | Versions: the pins in [results.md](results.md) (Environment). Run date: not recorded in this repo. |

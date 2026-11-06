@@ -2,12 +2,14 @@
 
 ## Loading remotes
 
-Remotes load through the runtime API. Every host registers its remotes with `registerRemotes` and loads them with
-`loadRemote("<name>/App")` from `@module-federation/runtime`. The shell gets the App Host URL from `public/config.json`
-(`config.dev.json` in dev). App Host gets the Use case A URL from `USE_CASES` in code (`apps/app-host/src/use-cases.ts`).
-No `remotes` in any build config. See [ADR-0003](adr/0003-runtime-remote-loading.md).
+Hybrid. The shell declares App Host as a static remote in its build config (`apps/shell/vite.config.ts`, with
+`shareStrategy: "loaded-first"`). App Host registers Use case A at runtime with `registerRemotes` and loads it with
+`loadRemote("<name>/App")` from `@module-federation/runtime`. The URLs come from env variables: `VITE_APP_HOST_URL` (shell build)
+and `VITE_USE_CASE_A_URL` (App Host build). The shell has no `config.json` and no runtime config. App Host's use-case list is
+`USE_CASES` in code (`apps/app-host/src/use-cases.ts`). No use case appears in any build config.
+See [ADR-0004](adr/0004-hybrid-remote-loading.md) (the decision) and [ADR-0003](adr/0003-runtime-remote-loading.md) (App Host → use cases, partly superseded).
 
-The requirement texts were written for build-time remotes. The "Runtime API" notes say how each one reads here.
+The requirement texts were written for build-time remotes. The "Hybrid" notes say how each one reads here.
 Status of each requirement against the code: [progress.md](progress.md).
 
 ## Goal
@@ -29,23 +31,23 @@ The spike result must be recorded as one of: **works** / **fallback** / **blocke
 
 ## Topology
 
-| App | Role | Port | Exposes | Remotes (runtime API) | Owns providers |
+| App | Role | Port | Exposes | Remotes (hybrid) | Owns providers |
 |---|---|---|---|---|---|---|
-| shell | host | 5170 | — | `appHost` from `config.json` | Router, QueryClientProvider, AuthProvider, LayoutProvider |
-| app-host | remote for shell + host for Use case A | 5174 | `./App` | `useCaseA` from `USE_CASES` in code | none (consumes shell's) |
+| shell | host | 5170 | — | `appHost`, static in `vite.config.ts` | Router, QueryClientProvider, AuthProvider, LayoutProvider |
+| app-host | remote for shell + host for Use case A | 5174 | `./App` | `useCaseA` at runtime, from `USE_CASES` in code | none (consumes shell's) |
 | use-case-a | leaf remote | 5175 | `./App` | — | none (consumes shell's) |
 
 ## Functional Requirements
 
-| ID | Area | Requirement | Acceptance / Verification | Runtime API |
+| ID | Area | Requirement | Acceptance / Verification | Hybrid |
 |---|---|---|---|---|
 | FR-01 | shell | Shell renders `BrowserRouter`, a single `QueryClientProvider` (one `QueryClient` instance), `AuthProvider` with a fake user, and `LayoutProvider` at the root. | Providers are mounted once at the app root. | — |
-| FR-02 | shell | Shell defines route `/app-host/*` that renders `React.lazy(() => import("appHost/App"))`. | Navigating to `/app-host` renders App Host. | Route `/app-host/*` in the shell router renders `RemoteBoundary` with `loadRemoteApp("appHost")`, which calls `loadRemote("appHost/App")`. No `import("appHost/App")` in the shell. |
-| FR-03 | shell | Shell declares **only** `appHost` in `remotes`. It must not reference `useCaseA` / `use-case-a` in config, imports or types. | `grep -rn "useCaseA\|use-case-a" apps/shell` returns nothing. | The shell registers only `appHost`, from `config.json`. No reference to Use case A in code or config. |
+| FR-02 | shell | Shell defines route `/app-host/*` that renders `React.lazy(() => import("appHost/App"))`. | Navigating to `/app-host` renders App Host. | Route `/app-host/*` renders `RemoteBoundary` (no `canRetryLoad`) with `import("appHost/App")` from the static remote in `vite.config.ts`. An App Host load failure recovers only by page reload (ADR-0004). |
+| FR-03 | shell | Shell declares **only** `appHost` in `remotes`. It must not reference `useCaseA` / `use-case-a` in config, imports or types. | `grep -rn "useCaseA\|use-case-a" apps/shell` returns nothing. | The shell's only remote is `appHost`, a static entry in `vite.config.ts`. No reference to Use case A in its code or config. |
 | FR-04 | shell | Shell provides a UI control to switch the fake user (e.g. "Alice" / "Bob"). | Switching the user re-renders shell header with the new name. | — |
 | FR-05 | shell | Shell exposes layout extension points: a context API (e.g. `useLayout().setBreadcrumbs()`) and a DOM mount node (e.g. `#shell-breadcrumbs`) for portals. | Both are available to any descendant component. | — |
 | FR-06 | app-host | App Host exposes `./App`. | Shell loads it via `appHost/App`. | — |
-| FR-07 | app-host | App Host declares remote `useCaseA` → `${VITE_USE_CASE_A_URL}/mf-manifest.json`. | Manifest request goes to port 5175. | Registered at runtime. The entry is the URL in `USE_CASES` (`use-cases.ts`): `http://localhost:5175/remoteEntry.js` in dev, `mf/use-case-a/remoteEntry.js` in build. The URL is the code, not a `VITE_*` variable. |
+| FR-07 | app-host | App Host declares remote `useCaseA` → `${VITE_USE_CASE_A_URL}/mf-manifest.json`. | Manifest request goes to port 5175. | Registered at runtime (`load-use-case.ts`). The entry is `entry` in `use-cases.ts`: `VITE_USE_CASE_A_URL` (build time), else `http://localhost:5175/remoteEntry.js` in dev and `mf/use-case-a/remoteEntry.js` in build. Gap: `remoteEntry.js`, not `mf-manifest.json`. |
 | FR-08 | app-host | App Host defines relative route `use-case-a/*` that renders `React.lazy(() => import("useCaseA/App"))`. App Host must not create its own Router. | `/app-host/use-case-a` renders Use case A inside App Host inside shell. | Relative route `use-case-a/*` is built from `USE_CASES` and renders `RemoteBoundary` with `loadUseCase`, which calls `loadRemote("useCaseA/App")`. No own Router. |
 | FR-09 | use-case-a | Use case A exposes `./App` and renders the text "Use case A" plus `useAuth().user.name` from the shell's auth context. | Shell user name is visible in Use case A. | — |
 | FR-10 | use-case-a | Use case A has at least two internal routes (e.g. `/app-host/use-case-a` and `/app-host/use-case-a/reports/:reportId`) using `Link` / `useNavigate`. Use case A must not create its own Router. | Navigation updates the URL; Back/Forward work across shell, App Host and Use case A. | — |
@@ -63,8 +65,8 @@ The spike result must be recorded as one of: **works** / **fallback** / **blocke
 | NFR-02 | Shared config | `shared` config is identical across all three apps (`singleton`, `strictVersion`, exact `requiredVersion`) and uses the same share scope (`default`). If subpath imports (`react/jsx-runtime`, `react-dom/client`) produce separate chunks, they are shared as well. | Config diff between apps is empty. |
 | NFR-03 | Isolation | Shell has zero knowledge of Use case A. Use case A is reachable only through App Host. | Code review + FR-03 check. |
 | NFR-04 | Dev/build parity | Every acceptance criterion is verified in both `vite dev` and `vite build && vite preview`. A dev-only success is not a valid result. | Acceptance matrix below is filled for both modes. |
-| NFR-05 | Configuration | Remote URLs come from env variables (`VITE_APP_HOST_URL`, `VITE_USE_CASE_A_URL`); no hardcoded URLs in source. | Changing env changes remote origin without code changes. |
-| NFR-06 | Build output | Remotes set an absolute `base` (e.g. `http://localhost:5175/`) for build so chunks load from the remote origin, not the host origin. `build.target: "esnext"` (top-level await). | No 404s for remote chunks in preview. |
+| NFR-05 | Configuration | Remote URLs come from env variables (`VITE_APP_HOST_URL`, `VITE_USE_CASE_A_URL`); no hardcoded URLs in source. | Set the variable and rebuild (or restart dev): the remote origin changes with no code change. Gap: the dev and single-origin defaults stay in `vite.config.ts` and `use-cases.ts`. |
+| NFR-06 | Build output | Remotes set an absolute `base` (e.g. `http://localhost:5175/`) for build so chunks load from the remote origin, not the host origin. `build.target: "esnext"` (top-level await). | Single origin: `base` is `/V1/mf/<app>/`, and the shell's App Host entry is `/V1/mf/app-host/remoteEntry.js`. No 404s for remote chunks in the production build (results.md). |
 | NFR-07 | Networking | Fixed ports 5170 / 5174 / 5175 with `strictPort: true`. CORS enabled on remote dev and preview servers. | No port drift, no CORS errors in console. |
 | NFR-08 | Single instance | Exactly one chunk each of react, react-dom, react-router and react-query is downloaded on `/app-host/use-case-a`. | DevTools → Network, filter by library name. |
 | NFR-09 | Fail-fast | A shared version mismatch must fail loudly (strictVersion error), never silently load a second copy. | Temporarily bump a version in Use case A and confirm the error. |
@@ -87,11 +89,11 @@ The spike result must be recorded as one of: **works** / **fallback** / **blocke
 
 ## Outcome Definitions
 
-| Outcome | Meaning | Runtime API |
+| Outcome | Meaning | Hybrid |
 |---|---|---|
-| **works** | AC-1…AC-7 pass in both modes using static `remotes` in App Host. | AC-1…AC-7 pass in both modes with the runtime loader (`registerRemotes` + `loadRemote`). |
-| **fallback** | AC-1…AC-7 pass in both modes only when App Host loads Use case A via `loadRemote`. | Not reached in this branch: AC-1…AC-7 pass with the runtime loader. |
-| **blocker** | At least one AC fails in at least one mode with both loaders. Document the failing AC, mode and root cause. | Applies to the runtime loader. |
+| **works** | AC-1…AC-7 pass in both modes. | AC-1…AC-7 pass in both modes with the hybrid loaders (static shell → App Host, runtime App Host → use cases). |
+| **fallback** | AC-1…AC-7 pass in both modes only when App Host loads Use case A via `loadRemote`. | Not reached in this branch: AC-1…AC-7 pass with the hybrid loaders. |
+| **blocker** | At least one AC fails in at least one mode with both loaders. Document the failing AC, mode and root cause. | Applies to the hybrid loaders. |
 
 ## Risks & Pitfalls
 
@@ -104,7 +106,7 @@ The spike result must be recorded as one of: **works** / **fallback** / **blocke
 | Relative `base` in remote builds | Remote chunks requested from host origin (404) | NFR-06 |
 | Unshared subpaths (`react/jsx-runtime`, `react-dom/client`) | Second React-related chunk, AC-7 fails | NFR-02 |
 | Nested `BrowserRouter` in App Host or Use case A | Broken history, duplicate router context | FR-08, FR-10 |
-| Failed remote entry memoised by the browser | Retry shows the same error until reload | Re-register the remote with `?retry=n` (`loadRemoteApp`, `loadUseCase`) |
+| Failed remote entry memoised by the browser | Retry shows the same error until reload | Re-register the remote with `?retry=n` (`loadUseCase`). The shell's static App Host remote cannot be retried in place: reload the page (ADR-0004) |
 
 ## Result
 
