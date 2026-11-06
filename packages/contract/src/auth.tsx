@@ -1,5 +1,7 @@
-import { createContext, type ReactNode, useContext } from "react";
+import { type ReactNode, useContext } from "react";
 import { Navigate } from "react-router-dom";
+
+import { getOrCreateContext } from "./registry";
 
 export const ModuleId = {
   Billing: "billing",
@@ -16,8 +18,8 @@ export interface AuthUser {
   allowedModules: ModuleId[];
 }
 
-// FR-14: TODO plain createContext, no Symbol.for registry; identity relies on the shared @portal/contract singleton
-export const AuthContext = createContext<{ user: AuthUser | null } | null>(null);
+// FR-14: registry context, so a second copy of this module reads the shell's provider
+export const AuthContext = getOrCreateContext<{ user: AuthUser | null } | null>("auth", null);
 
 // Only the shell renders this
 export const AuthProvider = ({ user, children }: { user: AuthUser | null; children: ReactNode }) => (

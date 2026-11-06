@@ -1,23 +1,17 @@
-import {
-  createContext,
-  type Dispatch,
-  type ReactNode,
-  type SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { type Dispatch, type ReactNode, type SetStateAction, useContext, useEffect, useState } from "react";
+
+import { getOrCreateContext } from "./registry";
 
 interface Crumb {
   order: number;
   label: string;
 }
 
-// FR-14: TODO plain createContext, no Symbol.for("shell.<name>.context") registry
-const BreadcrumbsContext = createContext<{
+// FR-14: registry context (see registry.ts)
+const BreadcrumbsContext = getOrCreateContext<{
   crumbs: Crumb[];
   setCrumbs: Dispatch<SetStateAction<Crumb[]>>;
-} | null>(null);
+} | null>("breadcrumbs", null);
 
 export const BreadcrumbsProvider = ({ children }: { children: ReactNode }) => {
   const [crumbs, setCrumbs] = useState<Crumb[]>([]);
