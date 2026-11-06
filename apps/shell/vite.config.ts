@@ -6,7 +6,7 @@ import { chunkFileName } from "../../config/chunk-names";
 import { federationShared } from "../../config/federation-shared";
 
 export default defineConfig(({ command, mode }) => {
-  // NFR-05: VITE_APP_HOST_URL is the full URL of App Host's remoteEntry.js; the defaults are the dev server and the single-origin build
+  // NFR-05: VITE_APP_HOST_URL, read at build time, is the full URL of App Host's remoteEntry.js; the defaults are the dev server and the single-origin build
   const { VITE_APP_HOST_URL } = loadEnv(mode, __dirname, "VITE_");
   const appHostEntry =
     VITE_APP_HOST_URL || (command === "build" ? "/V1/mf/app-host/remoteEntry.js" : "http://localhost:5174/remoteEntry.js");

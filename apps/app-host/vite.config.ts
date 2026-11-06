@@ -14,8 +14,8 @@ export default defineConfig(({ command }) => ({
       filename: "remoteEntry.js",
       // FR-06: exposes ./App for the shell
       exposes: { "./App": "./src/App.tsx" },
-      // FR-07: TODO the spec names mf-manifest.json from a VITE_* URL; Option A: the entry URL is in use-cases.ts
-      // NFR-08: shareStrategy is not set, so the default (version-first) applies in every app
+      // FR-07: TODO the spec names mf-manifest.json; this remote is remoteEntry.js (its URL is in use-cases.ts)
+      // NFR-08: shareStrategy is not set here, so the default (version-first) applies; the shell uses loaded-first
       shared: federationShared,
     }),
   ],

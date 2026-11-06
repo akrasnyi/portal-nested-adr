@@ -5,9 +5,11 @@ const useCaseA = {
     path: "use-case-a",
     title: "Use case A",
     subtitle: "Example use case loaded by App Host.",
-    // Option A: entry is the URL in code (dev origin, mf/<app>/ in build). NFR-05: TODO not a VITE_* env variable
-    // FR-07: TODO remoteEntry.js, not mf-manifest.json from VITE_USE_CASE_A_URL
-    entry: import.meta.env.DEV ? "http://localhost:5175/remoteEntry.js" : "mf/use-case-a/remoteEntry.js",
+    // NFR-05: VITE_USE_CASE_A_URL, read at build time, is the full remoteEntry.js URL (any origin); the defaults are the dev server and the single-origin build
+    // FR-07: TODO remoteEntry.js, not mf-manifest.json
+    entry:
+      import.meta.env.VITE_USE_CASE_A_URL ||
+      (import.meta.env.DEV ? "http://localhost:5175/remoteEntry.js" : "mf/use-case-a/remoteEntry.js"),
 } as const;
 
 // Experiment only (experiments/separate-repos): a remote built in another repo. Off unless VITE_USE_CASE_B is set at build time
