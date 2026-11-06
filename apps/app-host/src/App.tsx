@@ -40,11 +40,14 @@ export default function App() {
         <Routes>
           <Route index element={<Catalog />} />
           {/* FR-08: relative use-case-a/* routes built from USE_CASES; no own Router here */}
+          {/* canRetryLoad: loadUseCase re-registers the remote after a failure, so Retry works in place */}
           {USE_CASES.map((uc) => (
             <Route
               key={uc.id}
               path={`${uc.path}/*`}
-              element={<RemoteBoundary id={uc.remoteId} load={() => loadUseCase(uc)} />}
+              element={
+                <RemoteBoundary id={uc.remoteId} load={Object.assign(() => loadUseCase(uc), { canRetryLoad: true })} />
+              }
             />
           ))}
           <Route path="*" element={<Navigate to="." replace />} />

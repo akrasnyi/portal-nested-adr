@@ -17,7 +17,8 @@ export const router = createBrowserRouter(
           path: "/app-host/*",
           element: (
             <RequireModule moduleId="app-host">
-              <RemoteBoundary id="appHost" load={() => loadRemoteApp("appHost")} />
+              {/* canRetryLoad: loadRemoteApp re-registers appHost after a failure, so Retry works in place */}
+              <RemoteBoundary id="appHost" load={Object.assign(() => loadRemoteApp("appHost"), { canRetryLoad: true })} />
             </RequireModule>
           ),
         },

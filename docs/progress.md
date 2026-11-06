@@ -16,8 +16,9 @@ LayoutProvider = `BreadcrumbsProvider`, diagnostics = Use case A ProofPanel.
 - **App Host → Use case A:** [load-use-case.ts](../apps/app-host/src/load-use-case.ts) registers the remote on the first render of its route
   and loads it with `loadRemote`. The entry is `entry` in [use-cases.ts](../apps/app-host/src/use-cases.ts) (a URL in code).
 - **Retry:** both loaders catch a failed `loadRemote`, re-register the same name with `?retry=n` and `{ force: true }`, then rethrow.
-  The boundary ([remote-boundary.tsx](../packages/contract/src/remote-boundary.tsx)) shows "currently unavailable" and Retry. Verified in the build
-  (results-failures.md, 2b); not in dev.
+  Both are marked `canRetryLoad`, so the boundary ([remote-boundary.tsx](../packages/contract/src/remote-boundary.tsx)) offers Retry for a load error;
+  a render error, or any error within 10 s of a remount, offers "Reload page" ([recovery.ts](../packages/contract/src/recovery.ts)). Load errors
+  cannot be retried in place with build-time `remotes` (the reason is in recovery.ts). Retry checked in the production build with the block experiment (no document reload); dev not repeated.
 - **Entry timing:** Use case A's `remoteEntry.js` is requested only when its route opens.
 
 Status: ✅ Passed · 🟡 In progress / gap. Statuses come from the code and the evidence in [results.md](results.md) and
