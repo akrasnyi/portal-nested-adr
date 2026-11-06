@@ -10,8 +10,8 @@ import styles from "./ProofPanel.module.css";
 // Set by the shell before any remote loads (spike proof globals)
 const shell = () => (window as any).__shell as Record<string, any>;
 
-// VITE_MF_DEBUG=true (dev or build) logs the [mf-check] lines to the console. Read at build time; default off.
-const MF_DEBUG = import.meta.env.VITE_MF_DEBUG === "true";
+// FR-13: on in dev; a production build needs VITE_MF_DEBUG=true (build-time, so the logging is compiled out otherwise)
+const diagnosticsEnabled = import.meta.env.DEV || import.meta.env.VITE_MF_DEBUG === "true";
 
 let tenantFetched = false;
 
@@ -34,7 +34,7 @@ const shareScopeReport = () => {
   return { instances, providers: [...providers], loaded };
 };
 
-// FR-13: the table is the proof; with VITE_MF_DEBUG the same identity checks also go to the console as [mf-check]
+// FR-13: the table is the proof; with diagnostics on, the same identity checks also go to the console as [mf-check]
 export const ProofPanel = () => {
   const queryClient = useQueryClient();
   // FR-09: the auth-user row shows useAuth().user.name
@@ -85,7 +85,7 @@ export const ProofPanel = () => {
   ];
 
   useEffect(() => {
-    if (!MF_DEBUG) return;
+    if (!diagnosticsEnabled) return;
     const w = window as any;
     const results: [string, boolean, string][] = [
       ["react", w.__shellReact === React, `shell React ${w.__shellReact ? "set" : "missing"}`],

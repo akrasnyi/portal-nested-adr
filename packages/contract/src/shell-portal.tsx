@@ -10,6 +10,7 @@ export const ShellPortal = ({ target, children }: { target: string; children: Re
   const [node, setNode] = useState<HTMLElement | null>(null);
   useLayoutEffect(() => {
     const found = document.getElementById(target);
+    // Always on, not behind the diagnostics flag: a missing node is an operational error, not a check
     if (!found && !warned.has(target)) {
       warned.add(target);
       console.warn(`[portal] no shell node #${target}; ShellPortal renders nothing`);

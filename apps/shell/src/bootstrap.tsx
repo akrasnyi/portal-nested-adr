@@ -15,15 +15,14 @@ declare global {
   }
 }
 
-// VITE_MF_DEBUG=true (dev or build, e.g. `VITE_MF_DEBUG=true npm run build`) turns on the [mf-check] diagnostics.
-// Read at build time; unset or any other value means off, and then no __shellReact / __shellQueryClient globals.
-const MF_DEBUG = import.meta.env.VITE_MF_DEBUG === "true";
+// FR-12: on in dev; a production build needs VITE_MF_DEBUG=true (build-time, so the branch is compiled out otherwise)
+const diagnosticsEnabled = import.meta.env.DEV || import.meta.env.VITE_MF_DEBUG === "true";
 
 // Spike proof globals: set BEFORE any remote loads, remotes compare their imports against these
 window.__shell = { React, ReactDOM, ReactRouter, queryClient, AuthContext, contractModule };
 
 // FR-12: the names the spec uses for the remote-side [mf-check] comparison (ProofPanel)
-if (MF_DEBUG) {
+if (diagnosticsEnabled) {
   window.__shellReact = React;
   window.__shellQueryClient = queryClient;
   console.info("[mf-check] shell: __shellReact and __shellQueryClient set");
