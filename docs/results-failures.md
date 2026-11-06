@@ -1,3 +1,5 @@
+_Measured on the build where the shell loaded App Host through the runtime API (before ADR-0004). The nested level, which these results mostly cover, is unchanged._
+
 # Failure isolation and version mismatch experiments
 
 Same spike, same pins (`@module-federation/vite` 1.7.2, react 19.0.0 shared with `singleton + strictVersion + exact requiredVersion`).

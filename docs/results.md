@@ -1,3 +1,5 @@
+_Measured on the build where the shell loaded App Host through the runtime API (before ADR-0004). The nested level, which these results mostly cover, is unchanged._
+
 # Nested Module Federation spike: results
 
 Chain: shell -> app-host (remote of shell, host of Use case A) -> Use case A. The shell knows nothing about Use case A.
